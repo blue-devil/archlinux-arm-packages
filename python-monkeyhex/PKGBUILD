@@ -1,0 +1,26 @@
+# Maintainer: Blue DeviL // SCT <bluedevil.SCT@gmail.com>
+
+_pkgname='monkeyhex'
+_pipname="${_pkgname//-/_}"
+pkgname="python-${_pkgname}"
+pkgver=1.7.4
+pkgrel=1
+pkgdesc='Automatically format python interpreter results in hex'
+arch=('any')
+url='https://github.com/rhelmot/monkeyhex'
+license=('MIT')
+depends=(
+  'python-future'
+)
+makedepends=(
+  'python-setuptools'
+)
+source=("${_pkgname}-${pkgver}.tar.gz::https://files.pythonhosted.org/packages/source/${_pipname::1}/${_pipname}/${_pipname}-${pkgver}.tar.gz")
+sha256sums=('a646096dd3114ee8a7c6f30363f38c288ec56c4e032c8fc7e681792b604dd122')
+
+package() {
+  cd ${_pkgname}-${pkgver}
+  python setup.py install --root="${pkgdir}" --optimize=1
+}
+
+# vim:set ts=2 sw=2 et:
