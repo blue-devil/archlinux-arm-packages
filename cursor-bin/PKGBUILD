@@ -1,0 +1,49 @@
+# Maintainer: Blue DeviL // SCT <bluedevil.SCT@gmail.com>
+
+pkgname=cursor-bin
+pkgver=0.44.0
+pkgrel=1
+pkgdesc="Cursor App - AI-first coding environment (unofficial build)"
+arch=('aarch64')
+url="https://www.cursor.com/"
+license=('custom:Proprietary')  # Replace with the correct license if known
+depends=('fuse2' 'gtk3')
+options=(!strip)
+_appimage="${pkgname}-${pkgver}.AppImage"
+source_aarch64=("${_appimage}::https://github.com/coder/cursor-arm/releases/download/v${pkgver}/cursor_${pkgver}_linux_arm64.AppImage"
+            "cursor-bin.sh"
+            "cursor-bin.desktop.in"
+            "cursor.png")
+noextract=("${_appimage}")
+sha256sums_aarch64=('b74fdbc5c253936f19e83a619654cf68e14331795c9bd432c97c918d8d4f59ee'
+            'SKIP'
+            'SKIP'
+            'SKIP')
+
+prepare() {
+  # Set correct version in .desktop file
+  sed "s/@@PKGVERSION@@/${pkgver}/g" "${srcdir}/${pkgname}.desktop.in" > "${srcdir}/cursor-bin.desktop"
+}
+
+package() {
+  # Create directories
+  install -d "${pkgdir}/opt/${pkgname}"
+  install -d "${pkgdir}/usr/bin"
+  install -d "${pkgdir}/usr/share/applications"
+  install -d "${pkgdir}/usr/share/icons/hicolor/512x512/apps"
+
+  # Install files with proper permissions
+  install -m644 "${srcdir}/cursor-bin.desktop" "${pkgdir}/usr/share/applications/sct-cursor-bin.desktop"
+  install -m644 "${srcdir}/cursor.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/sct-cursor-bin.png"
+  install -m755 "${srcdir}/${_appimage}" "${pkgdir}/opt/${pkgname}/${pkgname}.AppImage"
+
+  # Install executable to be called 'cursor', that can load user flags from $XDG_CONFIG_HOME/cursor-flags.conf
+  install -m755 "${srcdir}/${pkgname}.sh" "${pkgdir}/usr/bin/sct-cursor-bin"
+}
+
+post_install() {
+  update-desktop-database -q
+  xdg-icon-resource forceupdate
+}
+
+# vim:set ts=2 sw=2 et:
