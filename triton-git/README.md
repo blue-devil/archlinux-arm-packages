@@ -8,6 +8,11 @@ As of 2024-11-10
 * This package is built with [bitwuzla][04] support
 * Compiled for `Python 3.12`
 
+## NOTE TO SELF
+
+Do not make a package for triton or angr, instead use pyenv and install
+these packages using PIP
+
 ## Resources
 
 * [Triton Library Homepage][06]
