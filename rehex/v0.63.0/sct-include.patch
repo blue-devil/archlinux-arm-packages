@@ -1,0 +1,11 @@
+diff --color -Naur rehex/src/buffer.hpp rehex-mod/src/buffer.hpp
+--- rehex/src/buffer.hpp	2025-06-13 09:58:12.964004625 +0200
++++ rehex-mod/src/buffer.hpp	2025-06-13 09:58:45.543004640 +0200
+@@ -33,6 +33,7 @@
+ #include "BitOffset.hpp"
+ #include "MacFileName.hpp"
+ #include "shared_mutex.hpp"
++#include <condition_variable>
+ 
+ namespace REHex {
+ 	wxDECLARE_EVENT(BACKING_FILE_DELETED, wxCommandEvent);
