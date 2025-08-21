@@ -1,0 +1,100 @@
+# Maintainer: grufo <madmurphy333 AT gmail DOT com>
+# Maintainer: Sebastian Jug <seb AT stianj DOT ug>
+# Contributor: midgard <arch.midgard AT janmaes DOT com>
+# Contributor: TrialnError <autumn-wind AT web DOT de>
+# Contributor: Yardena Cohen <yardenack AT gmail DOT com>
+# Contributor: Max Roder <maxroder AT web DOT de>
+# Contributor: BrLi
+# Contributor: Blue DeviL <bluedevil[dot]SCT[at]gmail[dot]com>
+#set -x
+_appname='tor-browser'
+pkgname="${_appname}-unofficial-port-bin"
+pkgver='13.0.9'
+pkgrel=1
+pkgdesc='Tor Browser Bundle: anonymous browsing using Firefox and Tor'
+url='https://www.torproject.org/projects/torbrowser.html'
+arch=('aarch64' 'armv7h')
+license=(MPL-2.0)
+depends=('libxt' 'startup-notification' 'mime-types' 'dbus-glib'
+    'alsa-lib' 'desktop-file-utils' 'hicolor-icon-theme'
+    'libvpx' 'icu' 'libevent' 'nss' 'hunspell' 'sqlite')
+optdepends=('zenity: simple dialog boxes'
+    'kdialog: KDE dialog boxes'
+    'gst-plugins-good: H.264 video'
+    'gst-libav: H.264 video'
+    'libpulse: PulseAudio audio driver'
+    'libnotify: Gnome dialog boxes')
+provides=("${_appname}")
+conflicts=("${_appname}")
+install="${_appname}.install"
+validpgpkeys=('CFFF1D4136F3AFA6')
+
+_tag_armv7h='linux-armhf'
+_tag_arm64='linux-arm64'
+_archstr=$([[ "$(uname -m)" == 'aarch64' ]] && echo -n "${_tag_arm64}" || echo -n "${_tag_armv7h}")
+_urlbase="https://downloads.sourceforge.net/sourceforge/tor-browser-ports"
+_urlsign="https://master.dl.sourceforge.net/project/tor-browser-ports"
+
+# Syntax: _dist_checksum 'linux-armhf'/'linux-arm64'
+_dist_checksum() {
+  (curl --silent --fail "${_urlsign}/${pkgver}/sha256sums-unsigned-build.txt?viasf=1" || \
+    curl --silent --fail "${_urlsign}/${pkgver}/sha256sums-unsigned-build.txt") | \
+    awk "/${_appname}-${1}-${pkgver}.tar.xz$/"'{print $1}'
+}
+
+# Make a string suitable for `sed`, by escaping `[]/&$.*^\` - syntax: `_sed_escape STRING`
+_sed_escape() {
+  echo "${1}" | sed 's/[]\/&.*$^[]/\\&/g'
+}
+
+source_armv7h=("${_urlbase}/${pkgver}/tor-browser-${_archstr}-${pkgver}.tar.xz"{,.asc})
+source_aarch64=("${_urlbase}/${pkgver}/tor-browser-${_archstr}-${pkgver}.tar.xz"{,.asc})
+source=("${_appname}-unofficial-port.desktop.in"
+        "${_appname}-unofficial-port.in"
+        "${_appname}.png"
+        "${_appname}.svg")
+
+### IMPORTANT #################################################################
+# No need for `makepkg -g`: the following sha256sums¸don't need to be updated #
+# with each release, everything is done automatically! Leave them like this!  #
+###############################################################################
+sha256sums=('e9b66b592a3495eb2c49005dbc0411a47bc3cd8b813063fef5961443cca16d25'
+            '1313484fc0572d82067f5671327540fcab6747fd2d187f216e1fc8edf3581509'
+            'f25ccf68b47f5eb14c6fec0664c74f30ea9c6c58d42fc6abac3b64670aaa3152'
+            '7b28b5dbe8ad573bb46e61b4d542b33e01ca240825ca640b4893fee6203b021f')
+sha256sums_armv7h=("$(_dist_checksum "${_tag_armv7h}")"
+                  'SKIP')
+sha256sums_aarch64=("$(_dist_checksum "${_tag_arm64}")"
+                  'SKIP')
+
+package() {
+
+  cd "${srcdir}"
+
+  local _sed_subst="
+    s/@PACKAGE_NAME@/$(_sed_escape "${pkgname}")/g
+    s/@PACKAGE_RELEASE@/$(_sed_escape "${pkgrel}")/g
+    s/@PACKAGE_VERSION@/$(_sed_escape "${pkgver}")/g
+    s/@PACKAGE_ARCH@/$(_sed_escape "${_archstr}")/g
+  "
+
+  install -dm755 "${pkgdir}/usr/bin"
+  sed "${_sed_subst}" "${_appname}-unofficial-port.in" > "${pkgdir}/usr/bin/${_appname}-unofficial-port"
+  chmod +x "${pkgdir}/usr/bin/${_appname}-unofficial-port"
+
+  install -dm755 \
+      "${pkgdir}/usr/share/icons/hicolor/scalable/apps" \
+      "${pkgdir}/usr/share/icons/hicolor/128x128/apps"
+
+  install -Dm644 "${srcdir}/${_appname}.png" "${pkgdir}/usr/share/icons/hicolor/128x128/apps/${_appname}.png"
+  install -Dm644 "${srcdir}/${_appname}.svg" "${pkgdir}/usr/share/icons/hicolor/scalable/apps/${_appname}.svg"
+
+  install -dm755 "${pkgdir}/usr/share/applications"
+  sed "${_sed_subst}" "${_appname}-unofficial-port.desktop.in" > \
+      "${pkgdir}/usr/share/applications/${_appname}-unofficial-port.desktop"
+
+  install -Dm444 "${_appname}-${_archstr}-${pkgver}.tar.xz" \
+      "${pkgdir}/opt/${pkgname}/${_appname}-${_archstr}-${pkgver}.tar.xz"
+}
+
+# vim: ts=2 sw=2 et:
