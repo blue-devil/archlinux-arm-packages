@@ -11,9 +11,9 @@ license=('custom:Proprietary')  # Replace with the correct license if known
 depends=('fuse2' 'gtk3')
 options=(!strip)
 _appimage="${pkgname}-${pkgver}.AppImage"
-source_aarch64=("${_appimage}::https://downloads.cursor.com/production/ba90f2f88e4911312761abab9492c42442117cfe/linux/arm64/Cursor-2.1.25-aarch64.AppImage" "cursor.png" "${pkgname}.desktop.in" "${pkgname}.sh")
+source_aarch64=("${_appimage}::https://downloads.cursor.com/production/7584ea888f7eb7bf76c9873a8f71b28f034a982e/linux/arm64/Cursor-2.1.25-aarch64.AppImage" "cursor.png" "${pkgname}.desktop.in" "${pkgname}.sh")
 noextract=("${_appimage}")
-sha512sums_aarch64=('f6d505ae60ddb8dc1e3909a596e4f88290584a229aa362b5bab30d96648700bbb3b9edb8365e3aa13e3038fa04d6671f0d83727a6207ad87b532c9efc87a970e'
+sha512sums_aarch64=('ff95e52d3f7e36e8990e1eaaa8970521003089d6f8f4f2acd2cc26731f6b9144f45dc5b8f388598bd0f38e33457d0c4379db380c764a38a11d3fc75dd8dc6bf1'
                    'f948c5718c2df7fe2cae0cbcd95fd3010ecabe77c699209d4af5438215daecd74b08e03d18d07a26112bcc5a80958105fda724768394c838d08465fce5f473e7'
                    '813d42d46f2e6aad72a599c93aeb0b11a668ad37b3ba94ab88deec927b79c34edf8d927e7bb2140f9147b086562736c3f708242183130824dd74b7a84ece67aa'
                    'ec3fa93a7df3ac97720d57e684f8745e3e34f39d9976163ea0001147961ca4caeb369de9d1e80c877bb417a0f1afa49547d154dde153be7fe6615092894cff47')
