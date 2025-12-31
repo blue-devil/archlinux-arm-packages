@@ -1,0 +1,24 @@
+# Maintainer: Blue DeviL <bluedevil[dot]SCT[at]gmail[dot]com>
+
+pkgname=novadock
+pkgver=0.1.1
+pkgrel=1
+pkgdesc="Modern XFCE4 dock & launchpad with magnification effects, plugin support, and custom themes"
+arch=('x86_64' 'aarch64')
+url="https://github.com/novik133/NovaDock"
+license=('GPL3')
+depends=('gtk3' 'glib2' 'libwnck3' 'libx11' 'appmenu-gtk-module')
+makedepends=('vala' 'meson' 'ninja' 'pkgconf')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/novik133/NovaDock/archive/v$pkgver.tar.gz")
+sha256sums=('92882bd9ab782308624f04fad8188a9041f57dcffd24cf845f628845cfad1426')
+
+build() {
+    cd "$srcdir/NovaDock-$pkgver"
+    arch-meson . build
+    meson compile -C build
+}
+
+package() {
+    cd "$srcdir/NovaDock-$pkgver"
+    meson install -C build --destdir "$pkgdir"
+}

@@ -6,11 +6,11 @@ pkgver=0.1.0
 pkgrel=1
 pkgdesc="A modern, modular macOS-style panel for Linux (X11/XFCE) built with Vala and GTK3"
 arch=('x86_64' 'aarch64')
-url="https://github.com/novik133/NovikBar"
+url="https://github.com/novik133/NovaBar"
 license=('GPL3')
 depends=('gtk3' 'glib2' 'libwnck3' 'networkmanager' 'libx11' 'appmenu-gtk-module')
 makedepends=('vala' 'meson' 'ninja' 'pkgconf')
-source=("$pkgname-$pkgver.tar.gz::https://github.com/novik133/NovikBar/archive/v$pkgver.tar.gz")
+source=("$pkgname-$pkgver.tar.gz::https://github.com/novik133/NovaBar/archive/v$pkgver.tar.gz")
 sha256sums=('d87a1b37be9607a9e6d4ce97328c1c653a33840f9a17c500cd6d53af822e953f')
 
 build() {
