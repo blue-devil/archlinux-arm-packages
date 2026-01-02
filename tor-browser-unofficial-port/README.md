@@ -1,7 +1,7 @@
 # Tor Browser Unofficial Port
 
 Unfortunately developers of Tor Browser have not released an ARM64
-release for Linux. Yes They had released an ARM64 release for macOS but not
+release for Linux. Yes they had released an ARM64 release for macOS but not
 for Linux. So some people have maintain a release for ARM64 Linux on
 SourceForge. And here I have made a ArchLinux Package from that unofficial
 release. Use on your own risk.
