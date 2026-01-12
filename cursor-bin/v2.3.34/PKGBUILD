@@ -1,0 +1,47 @@
+# Maintainer: Gunther Schulz <dev@guntherschulz.de>
+# Contributor: Blue DeviL // SCT <bluedevil.SCT@gmail.com>
+
+pkgname=cursor-bin
+pkgver=2.3.34
+pkgrel=1
+pkgdesc="Cursor App - AI-first coding environment"
+arch=('aarch64')
+url="https://www.cursor.com/"
+license=('custom:Proprietary')  # Replace with the correct license if known
+depends=('fuse2' 'gtk3')
+options=(!strip)
+_appimage="${pkgname}-${pkgver}.AppImage"
+source_aarch64=("${_appimage}::https://downloads.cursor.com/production/643ba67cd252e2888e296dd0cf34a0c5d7625b96/linux/arm64/Cursor-2.3.34-aarch64.AppImage" "cursor.svg" "${pkgname}.desktop.in" "${pkgname}.sh")
+noextract=("${_appimage}")
+sha512sums_aarch64=('9c5300cfdb7ea12a4c290c987b3543838a6ec3a2718a99dc03eb5edc023d6019dd50e11ac91a5d71bd7cc31f11d102da3e93c0c9f9ee85171209ae34fbec14bf'
+                   'e6218ecf49af620c97e81da75f4d685248a0fa149a5202c67f269e01b641cdf9831a57bbe3160b8a61a9421940dab79542f1e6f1959f9b504c7b78e644fd7aba'
+                   '813d42d46f2e6aad72a599c93aeb0b11a668ad37b3ba94ab88deec927b79c34edf8d927e7bb2140f9147b086562736c3f708242183130824dd74b7a84ece67aa'
+                   'ec3fa93a7df3ac97720d57e684f8745e3e34f39d9976163ea0001147961ca4caeb369de9d1e80c877bb417a0f1afa49547d154dde153be7fe6615092894cff47')
+
+prepare() {
+  # Set correct version in .desktop file
+  sed "s/@@PKGVERSION@@/${pkgver}/g" "${srcdir}/${pkgname}.desktop.in" > "${srcdir}/cursor-cursor.desktop"
+}
+
+package() {
+  # Create directories
+  install -d "${pkgdir}/opt/${pkgname}"
+  install -d "${pkgdir}/usr/bin"
+  install -d "${pkgdir}/usr/share/applications"
+  install -d "${pkgdir}/usr/share/icons"
+
+  # Install files with proper permissions
+  install -m644 "${srcdir}/cursor-cursor.desktop" "${pkgdir}/usr/share/applications/cursor-cursor.desktop"
+  install -m644 "${srcdir}/cursor.svg" "${pkgdir}/usr/share/icons/cursor.svg"
+  install -m755 "${srcdir}/${_appimage}" "${pkgdir}/opt/${pkgname}/${pkgname}.AppImage"
+
+  # Install executable to be called 'cursor', that can load user flags from $XDG_CONFIG_HOME/cursor-flags.conf
+  install -m755 "${srcdir}/${pkgname}.sh" "${pkgdir}/usr/bin/cursor"
+}
+
+post_install() {
+  update-desktop-database -q
+  xdg-icon-resource forceupdate
+}
+
+# vim: ts=2 sw=2 et:
