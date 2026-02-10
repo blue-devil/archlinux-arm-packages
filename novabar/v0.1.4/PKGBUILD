@@ -1,0 +1,31 @@
+# Maintainer: novik133 <your-email@example.com>
+# Contributor: Blue DeviL <bluedevil[dot]SCT[at]gmail[dot]com>
+
+pkgname=novabar
+pkgver=0.1.4
+pkgrel=1
+pkgdesc="A modern, modular macOS-style panel for Linux (X11/XFCE) built with Vala and GTK3"
+arch=('x86_64' 'aarch64')
+url="https://github.com/novik133/NovaBar"
+license=('GPL3')
+depends=('gtk3' 'glib2' 'libwnck3' 'networkmanager' 'libx11' 'appmenu-gtk-module')
+makedepends=('vala' 'meson' 'ninja' 'pkgconf')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/novik133/NovaBar/archive/v$pkgver.tar.gz")
+sha256sums=('4fe9441f55376e18f4ace9841b71508659157e8760e4f59ae932a8b94c39230e')
+
+build() {
+    cd "$srcdir/NovaBar-$pkgver"
+    arch-meson . build
+    meson compile -C build
+}
+
+package() {
+    cd "$srcdir/NovaBar-$pkgver"
+    meson install -C build --destdir "$pkgdir"
+    
+    # Install desktop file
+    install -Dm644 "$srcdir/NovaBar-$pkgver/$pkgname.desktop" "$pkgdir/usr/share/applications/$pkgname.desktop"
+    
+    # Install autostart file
+    install -Dm644 "$srcdir/NovaBar-$pkgver/$pkgname-autostart.desktop" "$pkgdir/etc/xdg/autostart/$pkgname.desktop"
+}
