@@ -33,7 +33,7 @@ libxslt.so.1 => /usr/lib/libxslt.so.1 (0x0000ffff90940000)
 
 Then I have found a thread on [ArchLinux | ARM Forums][01].
 
-I clone the files from [Chramium PKGBUILD][02] and needed files from ArchLinux
+I clone the files from [Chromium PKGBUILD][02] and needed files from ArchLinux
 ARM Github and run the command to build it:
 
 ```txt
