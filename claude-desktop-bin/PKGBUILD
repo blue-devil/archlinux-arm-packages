@@ -1,0 +1,69 @@
+# Maintainer: patrickjaja <patrickjajaa@gmail.com>
+# Contributor: Claude Desktop Linux Community
+# Contributor: Blue DeviL // SCT <bluedevil.SCT@gmail.com>
+# AUR Package Repository: https://github.com/patrickjaja/claude-desktop-bin
+
+pkgname=claude-desktop-bin
+pkgver=1.1.9310
+pkgrel=5
+pkgdesc="Claude Desktop - Linux (unofficial, from official binary)"
+arch=('x86_64' 'aarch64')
+url="https://github.com/patrickjaja/claude-desktop-bin"
+license=('custom:Claude')
+depends=('electron')
+optdepends=('nodejs: System Node.js for MCP extensions that require specific versions (Electron bundles Node.js as fallback)'
+            'claude-code: Claude Code CLI for agentic coding features (npm i -g @anthropic-ai/claude-code)'
+            'claude-cowork-service: Enables Cowork VM features on Linux'
+            'xdotool: Computer Use input + Quick Entry positioning (X11/XWayland)'
+            'scrot: Computer Use screenshots (X11)'
+            'xclip: Computer Use clipboard access (X11)'
+            'wmctrl: Computer Use running app detection (X11)'
+            'xorg-xrandr: Computer Use display enumeration (X11)'
+            'ydotool: Computer Use input automation (Wayland)'
+            'grim: Computer Use screenshots (Wayland/wlroots)'
+            'slurp: Computer Use region selection (Wayland/wlroots)'
+            'wl-clipboard: Computer Use clipboard access (Wayland)'
+            'wlr-randr: Computer Use display enumeration (Wayland/wlroots)'
+            'hyprland: Quick Entry cursor positioning on Hyprland Wayland (hyprctl)'
+            'socat: Cowork socket health check in launcher (fallback: age-based check)')
+provides=('claude-desktop')
+conflicts=('claude-desktop')
+source_x86_64=("claude-desktop-${pkgver}-${pkgrel}-linux.tar.gz::https://github.com/patrickjaja/claude-desktop-bin/releases/download/v1.1.9310-5/claude-desktop-1.1.9310-linux.tar.gz")
+sha256sums_x86_64=('12688944f03287f18792dad45108dd7fcaaace3829382d8d5c5fce8418c5204c')
+source_aarch64=("claude-desktop-${pkgver}-${pkgrel}-linux.tar.gz::https://github.com/patrickjaja/claude-desktop-bin/releases/download/v1.1.9310-5/claude-desktop-1.1.9310-linux.tar.gz")
+sha256sums_aarch64=('12688944f03287f18792dad45108dd7fcaaace3829382d8d5c5fce8418c5204c')
+options=('!strip')
+
+package() {
+    cd "$srcdir"
+
+    # Install application files (pre-patched)
+    install -dm755 "$pkgdir/usr/lib/$pkgname"
+    cp -r app/* "$pkgdir/usr/lib/$pkgname/"
+
+    # Install launcher script (Wayland/X11 detection, env setup, lock cleanup)
+    install -Dm755 "$srcdir/launcher/claude-desktop" "$pkgdir/usr/bin/claude-desktop"
+
+    # Install desktop entry
+    install -dm755 "$pkgdir/usr/share/applications"
+    cat > "$pkgdir/usr/share/applications/claude-desktop.desktop" << 'EOF'
+[Desktop Entry]
+Name=Claude
+Comment=Claude AI Desktop Application
+Exec=claude-desktop %u
+Icon=claude-desktop
+Type=Application
+Terminal=false
+Categories=Office;Utility;Chat;
+MimeType=x-scheme-handler/claude;
+StartupWMClass=Claude
+EOF
+
+    # Install icon (included in tarball)
+    if [ -f "$srcdir/icons/claude-desktop.png" ]; then
+        install -Dm644 "$srcdir/icons/claude-desktop.png" \
+            "$pkgdir/usr/share/icons/hicolor/256x256/apps/claude-desktop.png"
+    fi
+}
+
+# vim: set ts=4 sw=4 et:
