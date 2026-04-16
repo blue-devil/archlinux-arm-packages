@@ -1,0 +1,25 @@
+pkgbase = metasploit
+	pkgdesc = Advanced open-source platform for developing, testing, and using exploit code
+	pkgver = 6.4.103
+	pkgrel = 1
+	url = https://www.metasploit.com/
+	arch = x86_64
+	license = BSD
+	depends = git
+	depends = inetutils
+	depends = libpcap
+	depends = libxml2
+	depends = libxslt
+	depends = postgresql-libs
+	depends = ruby
+	depends = ruby-bundler
+	depends = ruby-erb
+	depends = sqlite
+	options = !strip
+	options = !debug
+	options = !emptydirs
+	source = git+https://github.com/rapid7/metasploit-framework.git#tag=6.4.103
+	sha256sums = d399ced714f8777da539d9cde33b4b2d056e5034f42dc50ab81a78788cfa3017
+	b2sums = 0b4f092984ab27aafd18ea2c0f4b81ae658dac77b55aa1b7217fc88e1df3223f4527b9581fd2dfc686d409d15151941494b68f3ab15492757641d23ccce59127
+
+pkgname = metasploit
