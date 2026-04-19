@@ -1,0 +1,5698 @@
+diff --git a/build/pkgs/mpmath/checksums.ini b/build/pkgs/mpmath/checksums.ini
+index e6964d7c004..4049f725a06 100644
+--- a/build/pkgs/mpmath/checksums.ini
++++ b/build/pkgs/mpmath/checksums.ini
+@@ -1,4 +1,4 @@
+ tarball=mpmath-VERSION.tar.gz
+-sha1=b7c00f35eb35978197c8f5afc11a8b4b994dd382
+-sha256=7a28eb2a9774d00c7bc92411c19a89209d5da7c4c9a9e227be8330a23a25b91f
++sha1=69eb8e7b67d8db4c7bb06b8177f4d7cae4134523
++sha256=3be9426d832ee19e3fcffad47f6d4f9fc90530ec926572e56f8eb83b72b6ce20
+ upstream_url=https://files.pythonhosted.org/packages/source/m/mpmath/mpmath-VERSION.tar.gz
+diff --git a/build/pkgs/mpmath/package-version.txt b/build/pkgs/mpmath/package-version.txt
+index f0bb29e7638..d6ed61fb889 100644
+--- a/build/pkgs/mpmath/package-version.txt
++++ b/build/pkgs/mpmath/package-version.txt
+@@ -1 +1 @@
+-1.3.0
++1.4.0a5
+diff --git a/build/pkgs/mpmath/version_requirements.txt b/build/pkgs/mpmath/version_requirements.txt
+index 8c3f379fbd4..8ee5a8533cc 100644
+--- a/build/pkgs/mpmath/version_requirements.txt
++++ b/build/pkgs/mpmath/version_requirements.txt
+@@ -1 +1 @@
+-mpmath >=1.1.0, <1.4
++mpmath >=1.4.0a4, <1.4.1
+diff --git a/src/sage/env.py b/src/sage/env.py
+index a1092291650..f6c198a8617 100644
+--- a/src/sage/env.py
++++ b/src/sage/env.py
+@@ -228,8 +228,9 @@ SINGULAR_BIN = var("SINGULAR_BIN") or "Singular"
+ OPENMP_CFLAGS = var("OPENMP_CFLAGS", "")
+ OPENMP_CXXFLAGS = var("OPENMP_CXXFLAGS", "")
+ 
+-# Make sure mpmath uses Sage types
+-os.environ['MPMATH_SAGE'] = '1'
++# Make sure that mpmath < 1.4 does not try to use Sage types
++os.environ.pop('MPMATH_SAGE', None)
++os.environ['MPMATH_NOSAGE'] = '1'
+ 
+ # misc
+ SAGE_BANNER = var("SAGE_BANNER", "")
+diff --git a/src/sage/libs/mpmath/ext_impl.pxd b/src/sage/libs/mpmath/ext_impl.pxd
+deleted file mode 100644
+index 586d10d17f2..00000000000
+--- a/src/sage/libs/mpmath/ext_impl.pxd
++++ /dev/null
+@@ -1,66 +0,0 @@
+-from sage.libs.gmp.all cimport mpz_t
+-
+-ctypedef struct MPopts:
+-    long prec
+-    int rounding
+-
+-cdef mpz_set_integer(mpz_t v, x)
+-cdef mpzi(mpz_t n)
+-cdef mpzl(mpz_t n)
+-cdef str rndmode_to_python(int rnd)
+-cdef rndmode_from_python(str rnd)
+-
+-ctypedef struct MPF:
+-    mpz_t man
+-    mpz_t exp
+-    int special
+-
+-cdef void MPF_init(MPF *x) noexcept
+-cdef void MPF_clear(MPF *x) noexcept
+-cdef void MPF_set(MPF *dest, MPF *src) noexcept
+-cdef void MPF_set_zero(MPF *x) noexcept
+-cdef void MPF_set_one(MPF *x) noexcept
+-cdef void MPF_set_nan(MPF *x) noexcept
+-cdef void MPF_set_inf(MPF *x) noexcept
+-cdef void MPF_set_ninf(MPF *x) noexcept
+-cdef MPF_set_si(MPF *x, long n)
+-cdef MPF_set_int(MPF *x, n)
+-cdef MPF_set_man_exp(MPF *x, man, exp)
+-cdef MPF_set_tuple(MPF *x, tuple value)
+-cdef MPF_to_tuple(MPF *x)
+-cdef MPF_set_double(MPF *r, double x)
+-cdef double MPF_to_double(MPF *x, bint strict) noexcept
+-cdef MPF_to_fixed(mpz_t r, MPF *x, long prec, bint truncate)
+-cdef int MPF_sgn(MPF *x) noexcept
+-cdef void MPF_neg(MPF *r, MPF *s) noexcept
+-cdef void MPF_abs(MPF *r, MPF *s) noexcept
+-cdef MPF_normalize(MPF *x, MPopts opts)
+-cdef void MPF_pos(MPF *x, MPF *y, MPopts opts) noexcept
+-cdef MPF_add(MPF *r, MPF *s, MPF *t, MPopts opts)
+-cdef MPF_sub(MPF *r, MPF *s, MPF *t, MPopts opts)
+-cdef bint MPF_eq(MPF *s, MPF *t) noexcept
+-cdef bint MPF_ne(MPF *s, MPF *t) noexcept
+-cdef int MPF_cmp(MPF *s, MPF *t) noexcept
+-cdef bint MPF_lt(MPF *s, MPF *t) noexcept
+-cdef bint MPF_le(MPF *s, MPF *t) noexcept
+-cdef bint MPF_gt(MPF *s, MPF *t) noexcept
+-cdef bint MPF_ge(MPF *s, MPF *t) noexcept
+-cdef MPF_mul(MPF *r, MPF *s, MPF *t, MPopts opts)
+-cdef MPF_div(MPF *r, MPF *s, MPF *t, MPopts opts)
+-cdef int MPF_sqrt(MPF *r, MPF *s, MPopts opts) noexcept
+-cdef MPF_hypot(MPF *r, MPF *a, MPF *b, MPopts opts)
+-cdef MPF_pow_int(MPF *r, MPF *x, mpz_t n, MPopts opts)
+-cdef MPF_set_double(MPF *r, double x)
+-cdef MPF_exp(MPF *y, MPF *x, MPopts opts)
+-cdef MPF_complex_sqrt(MPF *c, MPF *d, MPF *a, MPF *b, MPopts opts)
+-cdef MPF_complex_exp(MPF *re, MPF *im, MPF *a, MPF *b, MPopts opts)
+-cdef int MPF_log(MPF *y, MPF *x, MPopts opts) noexcept
+-cdef MPF_set_pi(MPF *x, MPopts opts)
+-cdef MPF_set_ln2(MPF *x, MPopts opts)
+-cdef MPF_cos(MPF *c, MPF *x, MPopts opts)
+-cdef MPF_sin(MPF *c, MPF *x, MPopts opts)
+-cdef MPF_cos_sin(MPF *c, MPF *s, MPF *x, MPopts opts)
+-cdef int MPF_pow(MPF *z, MPF *x, MPF *y, MPopts opts) except -1
+-cdef MPF_complex_pow(MPF *zre, MPF *zim, MPF *xre, MPF *xim, MPF *yre, MPF *yim, MPopts opts)
+-cdef MPF_hypsum(MPF *a, MPF *b, int p, int q, param_types, str ztype, coeffs, \
+-    z, long prec, long wp, long epsshift, dict magnitude_check, kwargs)
+diff --git a/src/sage/libs/mpmath/ext_impl.pyx b/src/sage/libs/mpmath/ext_impl.pyx
+deleted file mode 100644
+index fb078719ac0..00000000000
+--- a/src/sage/libs/mpmath/ext_impl.pyx
++++ /dev/null
+@@ -1,2284 +0,0 @@
+-"""
+-This module provides the core implementation of multiprecision
+-floating-point arithmetic. Operations are done in-place.
+-
+-TESTS:
+-
+-See if :issue:`15118` is fixed::
+-
+-    sage: import mpmath
+-    sage: mpmath.mpf(0)^(-2)
+-    Traceback (most recent call last):
+-    ...
+-    ZeroDivisionError
+-    sage: mpmath.zeta(2r, -3r)
+-    Traceback (most recent call last):
+-    ...
+-    ZeroDivisionError
+-"""
+-
+-#*****************************************************************************
+-# This program is free software: you can redistribute it and/or modify
+-# it under the terms of the GNU General Public License as published by
+-# the Free Software Foundation, either version 2 of the License, or
+-# (at your option) any later version.
+-#                  http://www.gnu.org/licenses/
+-#*****************************************************************************
+-
+-from cpython.long cimport *
+-from cpython.float cimport *
+-from cpython.complex cimport *
+-from cpython.number cimport *
+-
+-from libc.math cimport sqrt as fsqrt
+-from libc.math cimport frexp
+-
+-from cysignals.signals cimport sig_check
+-
+-from sage.ext.stdsage cimport PY_NEW
+-from sage.libs.gmp.all cimport *
+-from sage.libs.mpfr cimport *
+-from sage.rings.integer cimport Integer
+-
+-from sage.libs.gmp.pylong cimport *
+-
+-cdef mpz_set_integer(mpz_t v, x):
+-    if isinstance(x, int):
+-        mpz_set_pylong(v, x)
+-    elif isinstance(x, Integer):
+-        mpz_set(v, (<Integer>x).value)
+-    else:
+-        raise TypeError("cannot convert %s to an integer" % x)
+-
+-cdef inline void mpz_add_si(mpz_t a, mpz_t b, long x) noexcept:
+-    if x >= 0:
+-        mpz_add_ui(a, b, x)
+-    else:
+-        # careful: overflow when negating LONG_MIN
+-        mpz_sub_ui(a, b, -<unsigned long>x)
+-
+-cdef inline mpzi(mpz_t n):
+-    return mpz_get_pyintlong(n)
+-
+-cdef inline mpzl(mpz_t n):
+-    return mpz_get_pylong(n)
+-
+-# This should be done better
+-cdef int mpz_tstbit_abs(mpz_t z, unsigned long bit_index) noexcept:
+-    cdef int res
+-    if mpz_sgn(z) < 0:
+-        mpz_neg(z, z)
+-        res = mpz_tstbit(z, bit_index)
+-        mpz_neg(z, z)
+-    else:
+-        res = mpz_tstbit(z, bit_index)
+-    return res
+-
+-cdef void mpz_set_fixed(mpz_t t, MPF *x, int prec, bint abs=False) noexcept:
+-    """
+-    Set t = x, or t = |x|, as a fixed-point number with prec bits.
+-    """
+-    cdef int offset
+-    offset = mpz_get_si(x.exp) + prec
+-    if offset >= 0:
+-        mpz_mul_2exp(t, x.man, offset)
+-    else:
+-        mpz_tdiv_q_2exp(t, x.man, -offset)
+-    if abs:
+-        mpz_abs(t, t)
+-
+-cdef unsigned long mpz_bitcount(mpz_t z) noexcept:
+-    if mpz_sgn(z) == 0:
+-        return 0
+-    return mpz_sizeinbase(z, 2)
+-
+-# The following limits allowed exponent shifts. We could use mpz_fits_slong_p,
+-# but then (-LONG_MIN) wraps around; we may also not be able to add large
+-# shifts safely. A higher limit could be used on 64-bit systems, but
+-# it is unlikely that anyone will run into this (adding numbers
+-# that differ by 2^(2^30), at precisions of 2^30 bits).
+-
+-# Note: MPFR's emax is 1073741823
+-DEF MAX_SHIFT = 536870912      # 2^29
+-
+-cdef int mpz_reasonable_shift(mpz_t z) noexcept:
+-    if mpz_sgn(z) > 0:
+-        return mpz_cmp_ui(z, MAX_SHIFT) < 0
+-    else:
+-        return mpz_cmp_si(z, -MAX_SHIFT) > 0
+-
+-DEF ROUND_N = 0
+-DEF ROUND_F = 1
+-DEF ROUND_C = 2
+-DEF ROUND_D = 3
+-DEF ROUND_U = 4
+-
+-DEF S_NORMAL = 0
+-DEF S_ZERO = 1
+-DEF S_NZERO = 2
+-DEF S_INF = 3
+-DEF S_NINF = 4
+-DEF S_NAN = 5
+-
+-cdef inline str rndmode_to_python(int rnd):
+-    if rnd == ROUND_N: return 'n'
+-    if rnd == ROUND_F: return 'f'
+-    if rnd == ROUND_C: return 'c'
+-    if rnd == ROUND_D: return 'd'
+-    if rnd == ROUND_U: return 'u'
+-
+-cdef inline rndmode_from_python(str rnd):
+-    if rnd == 'n': return ROUND_N
+-    if rnd == 'f': return ROUND_F
+-    if rnd == 'c': return ROUND_C
+-    if rnd == 'd': return ROUND_D
+-    if rnd == 'u': return ROUND_U
+-
+-cdef inline mpfr_rnd_t rndmode_to_mpfr(int rnd) noexcept:
+-    if rnd == ROUND_N: return MPFR_RNDN
+-    if rnd == ROUND_F: return MPFR_RNDD
+-    if rnd == ROUND_C: return MPFR_RNDU
+-    if rnd == ROUND_D: return MPFR_RNDZ
+-    if rnd == ROUND_U: return MPFR_RNDA
+-
+-cdef inline int reciprocal_rnd(int rnd) noexcept:
+-    if rnd == ROUND_N: return ROUND_N
+-    if rnd == ROUND_D: return ROUND_U
+-    if rnd == ROUND_U: return ROUND_D
+-    if rnd == ROUND_C: return ROUND_F
+-    if rnd == ROUND_F: return ROUND_C
+-
+-cdef MPopts opts_exact
+-cdef MPopts opts_double_precision
+-cdef MPopts opts_mini_prec
+-
+-opts_exact.prec = 0
+-opts_exact.rounding = ROUND_N
+-opts_double_precision.prec = 53
+-opts_double_precision.rounding = ROUND_N
+-opts_mini_prec.prec = 5
+-opts_mini_prec.rounding = ROUND_D
+-
+-cdef double _double_inf = float("1e300") * float("1e300")
+-cdef double _double_ninf = -_double_inf
+-cdef double _double_nan = _double_inf - _double_inf
+-
+-cdef inline void MPF_init(MPF *x) noexcept:
+-    """Allocate space and set value to zero.
+-    Must be called exactly once when creating a new MPF."""
+-    x.special = S_ZERO
+-    mpz_init(x.man)
+-    mpz_init(x.exp)
+-
+-cdef inline void MPF_clear(MPF *x) noexcept:
+-    """Deallocate space. Must be called exactly once when finished with an MPF."""
+-    mpz_clear(x.man)
+-    mpz_clear(x.exp)
+-
+-cdef inline void MPF_set(MPF *dest, MPF *src) noexcept:
+-    """Clone MPF value. Assumes source value is already normalized."""
+-    if src is dest:
+-        return
+-    dest.special = src.special
+-    mpz_set(dest.man, src.man)
+-    mpz_set(dest.exp, src.exp)
+-
+-cdef inline void MPF_set_zero(MPF *x) noexcept:
+-    """Set value to 0."""
+-    x.special = S_ZERO
+-
+-cdef inline void MPF_set_one(MPF *x) noexcept:
+-    """Set value to 1."""
+-    x.special = S_NORMAL
+-    mpz_set_ui(x.man, 1)
+-    mpz_set_ui(x.exp, 0)
+-
+-cdef inline void MPF_set_nan(MPF *x) noexcept:
+-    """Set value to NaN (not a number)."""
+-    x.special = S_NAN
+-
+-cdef inline void MPF_set_inf(MPF *x) noexcept:
+-    """Set value to +infinity."""
+-    x.special = S_INF
+-
+-cdef inline void MPF_set_ninf(MPF *x) noexcept:
+-    """Set value to -infinity."""
+-    x.special = S_NINF
+-
+-cdef MPF_set_si(MPF *x, long n):
+-    """Set value to that of a given C (long) integer."""
+-    if n:
+-        x.special = S_NORMAL
+-        mpz_set_si(x.man, n)
+-        mpz_set_ui(x.exp, 0)
+-        MPF_normalize(x, opts_exact)
+-    else:
+-        MPF_set_zero(x)
+-
+-cdef MPF_set_int(MPF *x, n):
+-    """Set value to that of a given Python integer."""
+-    x.special = S_NORMAL
+-    mpz_set_integer(x.man, n)
+-    if mpz_sgn(x.man):
+-        mpz_set_ui(x.exp, 0)
+-        MPF_normalize(x, opts_exact)
+-    else:
+-        MPF_set_zero(x)
+-
+-cdef MPF_set_man_exp(MPF *x, man, exp):
+-    """
+-    Set value to man*2^exp where man, exp may be of any appropriate
+-    Python integer types.
+-    """
+-    x.special = S_NORMAL
+-    mpz_set_integer(x.man, man)
+-    mpz_set_integer(x.exp, exp)
+-    MPF_normalize(x, opts_exact)
+-
+-
+-# Temporary variables. Note: not thread-safe.
+-# Used by MPF_add/MPF_sub/MPF_div
+-cdef mpz_t tmp_exponent
+-mpz_init(tmp_exponent)
+-cdef MPF tmp0
+-MPF_init(&tmp0)
+-
+-# Used by MPF_hypot and MPF_cmp, which may call MPF_add/MPF_sub
+-cdef MPF tmp1
+-MPF_init(&tmp1)
+-cdef MPF tmp2
+-MPF_init(&tmp2)
+-
+-
+-# Constants needed in a few places
+-cdef MPF MPF_C_1
+-MPF_init(&MPF_C_1)
+-MPF_set_si(&MPF_C_1, 1)
+-cdef Integer MPZ_ZERO = Integer(0)
+-cdef tuple _mpf_fzero = (0, MPZ_ZERO, 0, 0)
+-cdef tuple _mpf_fnan = (0, MPZ_ZERO, -123, -1)
+-cdef tuple _mpf_finf = (0, MPZ_ZERO, -456, -2)
+-cdef tuple _mpf_fninf = (1, MPZ_ZERO, -789, -3)
+-
+-cdef MPF_set_tuple(MPF *x, tuple value):
+-    """
+-    Set value of an MPF to that of a normalized (sign, man, exp, bc) tuple
+-    in the format used by mpmath.libmp.
+-    """
+-    #cdef int sign
+-    cdef Integer man
+-    sign, _man, exp, _ = value
+-    if isinstance(_man, Integer):
+-        man = <Integer>_man
+-    else:
+-        # This is actually very unlikely; it should never happen
+-        # in internal code that man isn't an Integer. Maybe the check
+-        # can be avoided by doing checks in e.g. MPF_set_any?
+-        man = Integer(_man)
+-    if mpz_sgn(man.value):
+-        MPF_set_man_exp(x, man, exp)
+-        if sign:
+-            mpz_neg(x.man, x.man)
+-        return
+-    if value == _mpf_fzero:
+-        MPF_set_zero(x)
+-    elif value == _mpf_finf:
+-        MPF_set_inf(x)
+-    elif value == _mpf_fninf:
+-        MPF_set_ninf(x)
+-    else:
+-        MPF_set_nan(x)
+-
+-cdef MPF_to_tuple(MPF *x):
+-    """Convert MPF value to (sign, man, exp, bc) tuple."""
+-    cdef Integer man
+-    if x.special:
+-        if x.special == S_ZERO: return _mpf_fzero
+-        #if x.special == S_NZERO: return _mpf_fnzero
+-        if x.special == S_INF: return _mpf_finf
+-        if x.special == S_NINF: return _mpf_fninf
+-        return _mpf_fnan
+-    man = PY_NEW(Integer)
+-    if mpz_sgn(x.man) < 0:
+-        mpz_neg(man.value, x.man)
+-        sign = 1
+-    else:
+-        mpz_set(man.value, x.man)
+-        sign = 0
+-    exp = mpz_get_pyintlong(x.exp)
+-    bc = mpz_sizeinbase(x.man, 2)
+-    return (sign, man, exp, bc)
+-
+-cdef MPF_set_double(MPF *r, double x):
+-    """
+-    Set r to the value of a C double x.
+-    """
+-    cdef int exp
+-    cdef double man
+-    if x != x:
+-        MPF_set_nan(r)
+-        return
+-    if x == _double_inf:
+-        MPF_set_inf(r)
+-        return
+-    if x == _double_ninf:
+-        MPF_set_ninf(r)
+-        return
+-    man = frexp(x, &exp)
+-    man *= 9007199254740992.0
+-    mpz_set_d(r.man, man)
+-    mpz_set_si(r.exp, exp-53)
+-    r.special = S_NORMAL
+-    MPF_normalize(r, opts_exact)
+-
+-import math as pymath
+-
+-# TODO: implement this function safely without using the Python math module
+-cdef double MPF_to_double(MPF *x, bint strict) noexcept:
+-    """Convert MPF value to a Python float."""
+-    if x.special == S_NORMAL:
+-        man = mpzi(x.man)
+-        exp = mpzi(x.exp)
+-        bc = mpz_sizeinbase(x.man, 2)
+-        try:
+-            if bc < 100:
+-                return pymath.ldexp(man, exp)
+-            # Try resizing the mantissa. Overflow may still happen here.
+-            n = bc - 53
+-            m = man >> n
+-            return pymath.ldexp(m, exp + n)
+-        except OverflowError:
+-            if strict:
+-                raise
+-            # Overflow to infinity
+-            if exp + bc > 0:
+-                if man < 0:
+-                    return _double_ninf
+-                else:
+-                    return _double_inf
+-            # Underflow to zero
+-            return 0.0
+-    if x.special == S_ZERO:
+-        return 0.0
+-    if x.special == S_INF:
+-        return _double_inf
+-    if x.special == S_NINF:
+-        return _double_ninf
+-    return _double_nan
+-
+-cdef MPF_to_fixed(mpz_t r, MPF *x, long prec, bint truncate):
+-    """
+-    Set r = x, r being in the format of a fixed-point number with prec bits.
+-    Floor division is used unless truncate=True in which case
+-    truncating division is used.
+-    """
+-    cdef long shift
+-    if x.special:
+-        if x.special == S_ZERO or x.special == S_NZERO:
+-            mpz_set_ui(r, 0)
+-            return
+-        raise ValueError("cannot create fixed-point number from special value")
+-    if mpz_reasonable_shift(x.exp):
+-        # XXX: signed integer overflow
+-        shift = mpz_get_si(x.exp) + prec
+-        if shift >= 0:
+-            mpz_mul_2exp(r, x.man, shift)
+-        else:
+-            if truncate:
+-                mpz_tdiv_q_2exp(r, x.man, -shift)
+-            else:
+-                mpz_fdiv_q_2exp(r, x.man, -shift)
+-        return
+-    # Underflow
+-    if mpz_sgn(x.exp) < 0:
+-        mpz_set_ui(r, 0)
+-        return
+-    raise OverflowError("cannot convert huge number to fixed-point format")
+-
+-cdef int MPF_sgn(MPF *x) noexcept:
+-    """
+-    Give the sign of an MPF (-1, 0, or 1).
+-    """
+-    if x.special:
+-        if x.special == S_INF:
+-            return 1
+-        if x.special == S_NINF:
+-            return -1
+-        return 0
+-    return mpz_sgn(x.man)
+-
+-cdef void MPF_neg(MPF *r, MPF *s) noexcept:
+-    """
+-    Set r = -s. MPF_neg(x, x) negates in place.
+-    """
+-    if s.special:
+-        if s.special == S_ZERO:
+-            r.special = S_ZERO  # r.special = S_NZERO
+-        elif s.special == S_NZERO:
+-            r.special = S_ZERO
+-        elif s.special == S_INF:
+-            r.special = S_NINF
+-        elif s.special == S_NINF:
+-            r.special = S_INF
+-        else:
+-            r.special = s.special
+-        return
+-    r.special = s.special
+-    mpz_neg(r.man, s.man)
+-    if r is not s:
+-        mpz_set(r.exp, s.exp)
+-
+-cdef void MPF_abs(MPF *r, MPF *s) noexcept:
+-    """
+-    Set r = abs(s). MPF_abs(r, r) sets the absolute value in place.
+-    """
+-    if s.special:
+-        if s.special == S_NINF:
+-            r.special = S_INF
+-        else:
+-            r.special = s.special
+-        return
+-    r.special = s.special
+-    mpz_abs(r.man, s.man)
+-    if r is not s:
+-        mpz_set(r.exp, s.exp)
+-
+-cdef MPF_normalize(MPF *x, MPopts opts):
+-    """
+-    Normalize.
+-
+-    With prec = 0, trailing zero bits are stripped but no rounding
+-    is performed.
+-    """
+-    cdef int sign
+-    cdef long trail, bc, shift
+-    if x.special != S_NORMAL:
+-        return
+-    sign = mpz_sgn(x.man)
+-    if sign == 0:
+-        x.special = S_ZERO
+-        mpz_set_ui(x.exp, 0)
+-        return
+-    bc = mpz_sizeinbase(x.man, 2)
+-    shift = bc - opts.prec
+-    # Ok if mantissa small and no trailing zero bits
+-    if (shift <= 0 or not opts.prec) and mpz_odd_p(x.man):
+-        return
+-    # Mantissa is too large, so divide by appropriate power of 2
+-    # Need to be careful about rounding
+-    if shift > 0 and opts.prec:
+-        if opts.rounding == ROUND_N:
+-            if mpz_tstbit_abs(x.man, shift-1):
+-                if mpz_tstbit_abs(x.man, shift) or mpz_scan1(x.man, 0) < (shift-1):
+-                    if sign < 0:
+-                        mpz_fdiv_q_2exp(x.man, x.man, shift)
+-                    else:
+-                        mpz_cdiv_q_2exp(x.man, x.man, shift)
+-                else:
+-                    mpz_tdiv_q_2exp(x.man, x.man, shift)
+-            else:
+-                mpz_tdiv_q_2exp(x.man, x.man, shift)
+-        elif opts.rounding == ROUND_D:
+-            mpz_tdiv_q_2exp(x.man, x.man, shift)
+-        elif opts.rounding == ROUND_F:
+-            mpz_fdiv_q_2exp(x.man, x.man, shift)
+-        elif opts.rounding == ROUND_C:
+-            mpz_cdiv_q_2exp(x.man, x.man, shift)
+-        elif opts.rounding == ROUND_U:
+-            if sign < 0:
+-                mpz_fdiv_q_2exp(x.man, x.man, shift)
+-            else:
+-                mpz_cdiv_q_2exp(x.man, x.man, shift)
+-        else:
+-            raise ValueError("bad rounding mode")
+-    else:
+-        shift = 0
+-    # Strip trailing bits
+-    trail = mpz_scan1(x.man, 0)
+-    if 0 < trail < bc:
+-        mpz_tdiv_q_2exp(x.man, x.man, trail)
+-        shift += trail
+-    mpz_add_si(x.exp, x.exp, shift)
+-
+-cdef void MPF_pos(MPF *x, MPF *y, MPopts opts) noexcept:
+-    """
+-    Set x = +y (i.e. copy the value, and round if the
+-    working precision is smaller than the width
+-    of the mantissa of y).
+-    """
+-    MPF_set(x, y)
+-    MPF_normalize(x, opts)
+-
+-cdef void _add_special(MPF *r, MPF *s, MPF *t) noexcept:
+-    if s.special == S_ZERO:
+-        # (+0) + (-0) = +0
+-        if t.special == S_NZERO:
+-            MPF_set(r, s)
+-        # (+0) + x = x
+-        else:
+-            MPF_set(r, t)
+-    elif t.special == S_ZERO:
+-        # (-0) + (+0) = +0
+-        if s.special == S_NZERO:
+-            MPF_set(r, t)
+-        # x + (+0) = x
+-        else:
+-            MPF_set(r, s)
+-    # (+/- 0) + x = x
+-    elif s.special == S_NZERO:
+-        MPF_set(r, t)
+-    elif t.special == S_NZERO:
+-        MPF_set(r, s)
+-    # (+/- inf) + (-/+ inf) = nan
+-    elif ((s.special == S_INF and t.special == S_NINF) or
+-       (s.special == S_NINF and t.special == S_INF)):
+-        MPF_set_nan(r)
+-    # nan or +/- inf trumps any finite number
+-    elif s.special == S_NAN or t.special == S_NAN:
+-        MPF_set_nan(r)
+-    elif s.special:
+-        MPF_set(r, s)
+-    else:
+-        MPF_set(r, t)
+-    return
+-
+-cdef void _sub_special(MPF *r, MPF *s, MPF *t) noexcept:
+-    if s.special == S_ZERO:
+-        # (+0) - (+/-0) = (+0)
+-        if t.special == S_NZERO:
+-            MPF_set(r, s)
+-        else:
+-            # (+0) - x = (-x)
+-            MPF_neg(r, t)
+-    elif t.special == S_ZERO:
+-        # x - (+0) = x; also covers (-0) - (+0) = (-0)
+-        MPF_set(r, s)
+-    # (-0) - x = x
+-    elif s.special == S_NZERO:
+-        # (-0) - (-0) = (+0)
+-        if t.special == S_NZERO:
+-            MPF_set_zero(r)
+-        # (-0) - x = -x
+-        else:
+-            MPF_neg(r, t)
+-    elif t.special == S_NZERO:
+-        # x - (-0) = x
+-        MPF_set(r, s)
+-    # (+/- inf) - (+/- inf) = nan
+-    elif ((s.special == S_INF and t.special == S_INF) or
+-       (s.special == S_NINF and t.special == S_NINF)):
+-        MPF_set_nan(r)
+-    elif s.special == S_NAN or t.special == S_NAN:
+-        MPF_set_nan(r)
+-    # nan - x or (+/-inf) - x = l.h.s
+-    elif s.special:
+-        MPF_set(r, s)
+-    # x - nan or x - (+/-inf) = (- r.h.s)
+-    else:
+-        MPF_neg(r, t)
+-
+-cdef void _mul_special(MPF *r, MPF *s, MPF *t) noexcept:
+-    if s.special == S_ZERO:
+-        if t.special == S_NORMAL or t.special == S_ZERO:
+-            MPF_set(r, s)
+-        elif t.special == S_NZERO:
+-            MPF_set(r, t)
+-        else:
+-            MPF_set_nan(r)
+-    elif t.special == S_ZERO:
+-        if s.special == S_NORMAL:
+-            MPF_set(r, t)
+-        elif s.special == S_NZERO:
+-            MPF_set(r, s)
+-        else:
+-            MPF_set_nan(r)
+-    elif s.special == S_NZERO:
+-        if t.special == S_NORMAL:
+-            if mpz_sgn(t.man) < 0:
+-                MPF_set_zero(r)
+-            else:
+-                MPF_set(r, s)
+-        else:
+-            MPF_set_nan(r)
+-    elif t.special == S_NZERO:
+-        if s.special == S_NORMAL:
+-            if mpz_sgn(s.man) < 0:
+-                MPF_set_zero(r)
+-            else:
+-                MPF_set(r, t)
+-        else:
+-            MPF_set_nan(r)
+-    elif s.special == S_NAN or t.special == S_NAN:
+-        MPF_set_nan(r)
+-    else:
+-        if MPF_sgn(s) == MPF_sgn(t):
+-            MPF_set_inf(r)
+-        else:
+-            MPF_set_ninf(r)
+-
+-cdef _div_special(MPF *r, MPF *s, MPF *t):
+-    # TODO: handle signed zeros correctly
+-    if s.special == S_NAN or t.special == S_NAN:
+-        MPF_set_nan(r)
+-    elif t.special == S_ZERO or t.special == S_NZERO:
+-        raise ZeroDivisionError
+-    elif s.special == S_ZERO or s.special == S_NZERO:
+-        MPF_set_zero(r)
+-    elif s.special == S_NORMAL:
+-        MPF_set_zero(r)
+-    elif s.special == S_INF or s.special == S_NINF:
+-        if t.special == S_INF or t.special == S_NINF:
+-            MPF_set_nan(r)
+-        elif MPF_sgn(s) == MPF_sgn(t):
+-            MPF_set_inf(r)
+-        else:
+-            MPF_set_ninf(r)
+-    # else:
+-    elif t.special == S_INF or t.special == S_NINF:
+-        MPF_set_zero(r)
+-
+-cdef _add_perturbation(MPF *r, MPF *s, int sign, MPopts opts):
+-    cdef long shift
+-    if opts.rounding == ROUND_N:
+-        MPF_set(r, s)
+-    else:
+-        shift = opts.prec - mpz_sizeinbase(s.man, 2) + 8
+-        if shift < 0:
+-            shift = 8
+-        mpz_mul_2exp(r.man, s.man, shift)
+-        mpz_add_si(r.man, r.man, sign)
+-        mpz_sub_ui(r.exp, s.exp, shift)
+-        MPF_normalize(r, opts)
+-
+-cdef MPF_add(MPF *r, MPF *s, MPF *t, MPopts opts):
+-    """
+-    Set r = s + t, with exact rounding.
+-
+-    With prec = 0, the addition is performed exactly. Note that this
+-    may cause overflow if the exponents are huge.
+-    """
+-    cdef long shift, sbc, tbc
+-    #assert (r is not s) and (r is not t)
+-    if s.special or t.special:
+-        _add_special(r, s, t)
+-        return
+-    r.special = S_NORMAL
+-    # Difference between exponents
+-    mpz_sub(tmp_exponent, s.exp, t.exp)
+-    if mpz_reasonable_shift(tmp_exponent):
+-        shift = mpz_get_si(tmp_exponent)
+-        if shift >= 0:
+-            # |s| >> |t|
+-            if shift > 2*opts.prec and opts.prec:
+-                sbc = mpz_sizeinbase(s.man, 2)
+-                tbc = mpz_sizeinbase(t.man, 2)
+-                if shift + sbc - tbc > opts.prec+8:
+-                    _add_perturbation(r, s, mpz_sgn(t.man), opts)
+-                    return
+-            # |s| > |t|
+-            mpz_mul_2exp(tmp0.man, s.man, shift)
+-            mpz_add(r.man, tmp0.man, t.man)
+-            mpz_set(r.exp, t.exp)
+-            MPF_normalize(r, opts)
+-        elif shift < 0:
+-            shift = -shift
+-            # |s| << |t|
+-            if shift > 2*opts.prec and opts.prec:
+-                sbc = mpz_sizeinbase(s.man, 2)
+-                tbc = mpz_sizeinbase(t.man, 2)
+-                if shift + tbc - sbc > opts.prec+8:
+-                    _add_perturbation(r, t, mpz_sgn(s.man), opts)
+-                    return
+-            # |s| < |t|
+-            mpz_mul_2exp(tmp0.man, t.man, shift)
+-            mpz_add(r.man, tmp0.man, s.man)
+-            mpz_set(r.exp, s.exp)
+-            MPF_normalize(r, opts)
+-    else:
+-        if not opts.prec:
+-            raise OverflowError("the exact result does not fit in memory")
+-        # |s| >>> |t|
+-        if mpz_sgn(tmp_exponent) > 0:
+-            _add_perturbation(r, s, mpz_sgn(t.man), opts)
+-        # |s| <<< |t|
+-        else:
+-            _add_perturbation(r, t, mpz_sgn(s.man), opts)
+-
+-cdef MPF_sub(MPF *r, MPF *s, MPF *t, MPopts opts):
+-    """
+-    Set r = s - t, with exact rounding.
+-
+-    With prec = 0, the addition is performed exactly. Note that this
+-    may cause overflow if the exponents are huge.
+-    """
+-    cdef long shift, sbc, tbc
+-    #assert (r is not s) and (r is not t)
+-    if s.special or t.special:
+-        _sub_special(r, s, t)
+-        return
+-    r.special = S_NORMAL
+-    # Difference between exponents
+-    mpz_sub(tmp_exponent, s.exp, t.exp)
+-    if mpz_reasonable_shift(tmp_exponent):
+-        shift = mpz_get_si(tmp_exponent)
+-        if shift >= 0:
+-            # |s| >> |t|
+-            if shift > 2*opts.prec and opts.prec:
+-                sbc = mpz_sizeinbase(s.man, 2)
+-                tbc = mpz_sizeinbase(t.man, 2)
+-                if shift + sbc - tbc > opts.prec+8:
+-                    _add_perturbation(r, s, -mpz_sgn(t.man), opts)
+-                    return
+-            # |s| > |t|
+-            mpz_mul_2exp(tmp0.man, s.man, shift)
+-            mpz_sub(r.man, tmp0.man, t.man)
+-            mpz_set(r.exp, t.exp)
+-            MPF_normalize(r, opts)
+-        elif shift < 0:
+-            shift = -shift
+-            # |s| << |t|
+-            if shift > 2*opts.prec and opts.prec:
+-                sbc = mpz_sizeinbase(s.man, 2)
+-                tbc = mpz_sizeinbase(t.man, 2)
+-                if shift + tbc - sbc > opts.prec+8:
+-                    _add_perturbation(r, t, -mpz_sgn(s.man), opts)
+-                    MPF_neg(r, r)
+-                    return
+-            # |s| < |t|
+-            mpz_mul_2exp(tmp0.man, t.man, shift)
+-            mpz_sub(r.man, s.man, tmp0.man)
+-            mpz_set(r.exp, s.exp)
+-            MPF_normalize(r, opts)
+-    else:
+-        if not opts.prec:
+-            raise OverflowError("the exact result does not fit in memory")
+-        # |s| >>> |t|
+-        if mpz_sgn(tmp_exponent) > 0:
+-            _add_perturbation(r, s, -mpz_sgn(t.man), opts)
+-        # |s| <<< |t|
+-        else:
+-            _add_perturbation(r, t, -mpz_sgn(s.man), opts)
+-            MPF_neg(r, r)
+-
+-cdef bint MPF_eq(MPF *s, MPF *t) noexcept:
+-    """
+-    Evaluates s == t.
+-    """
+-    if s.special == S_NAN or t.special == S_NAN:
+-        return False
+-    if s.special == t.special:
+-        if s.special == S_NORMAL:
+-            return (mpz_cmp(s.man, t.man) == 0) and (mpz_cmp(s.exp, t.exp) == 0)
+-        else:
+-            return True
+-    return False
+-
+-cdef bint MPF_ne(MPF *s, MPF *t) noexcept:
+-    """
+-    Evaluates s != t.
+-    """
+-    if s.special == S_NAN or t.special == S_NAN:
+-        return True
+-    if s.special == S_NORMAL and t.special == S_NORMAL:
+-        return (mpz_cmp(s.man, t.man) != 0) or (mpz_cmp(s.exp, t.exp) != 0)
+-    return s.special != t.special
+-
+-cdef int MPF_cmp(MPF *s, MPF *t) noexcept:
+-    """
+-    Evaluates cmp(s,t). Conventions for nan follow those
+-    of the mpmath.libmp function.
+-    """
+-    cdef long sbc, tbc
+-    cdef int cm
+-    if MPF_eq(s, t):
+-        return 0
+-    if s.special != S_NORMAL or t.special != S_NORMAL:
+-        if s.special == S_ZERO: return -MPF_sgn(t)
+-        if t.special == S_ZERO: return MPF_sgn(s)
+-        if t.special == S_NAN: return 1
+-        if s.special == S_INF: return 1
+-        if t.special == S_NINF: return 1
+-        return -1
+-    if mpz_sgn(s.man) != mpz_sgn(t.man):
+-        if mpz_sgn(s.man) < 0:
+-            return -1
+-        else:
+-            return 1
+-    if not mpz_cmp(s.exp, t.exp):
+-        return mpz_cmp(s.man, t.man)
+-    mpz_add_ui(tmp1.exp, s.exp, mpz_sizeinbase(s.man, 2))
+-    mpz_add_ui(tmp2.exp, t.exp, mpz_sizeinbase(t.man, 2))
+-    cm = mpz_cmp(tmp1.exp, tmp2.exp)
+-    if mpz_sgn(s.man) < 0:
+-        if cm < 0: return 1
+-        if cm > 0: return -1
+-    else:
+-        if cm < 0: return -1
+-        if cm > 0: return 1
+-    MPF_sub(&tmp1, s, t, opts_mini_prec)
+-    return MPF_sgn(&tmp1)
+-
+-cdef bint MPF_lt(MPF *s, MPF *t) noexcept:
+-    """
+-    Evaluates s < t.
+-    """
+-    if s.special == S_NAN or t.special == S_NAN:
+-        return False
+-    return MPF_cmp(s, t) < 0
+-
+-cdef bint MPF_le(MPF *s, MPF *t) noexcept:
+-    """
+-    Evaluates s <= t.
+-    """
+-    if s.special == S_NAN or t.special == S_NAN:
+-        return False
+-    return MPF_cmp(s, t) <= 0
+-
+-cdef bint MPF_gt(MPF *s, MPF *t) noexcept:
+-    """
+-    Evaluates s > t.
+-    """
+-    if s.special == S_NAN or t.special == S_NAN:
+-        return False
+-    return MPF_cmp(s, t) > 0
+-
+-cdef bint MPF_ge(MPF *s, MPF *t) noexcept:
+-    """
+-    Evaluates s >= t.
+-    """
+-    if s.special == S_NAN or t.special == S_NAN:
+-        return False
+-    return MPF_cmp(s, t) >= 0
+-
+-cdef MPF_mul(MPF *r, MPF *s, MPF *t, MPopts opts):
+-    """
+-    Set r = s * t, with correct rounding.
+-
+-    With prec = 0, the multiplication is performed exactly,
+-    i.e. no rounding is performed.
+-    """
+-    if s.special or t.special:
+-        _mul_special(r, s, t)
+-    else:
+-        r.special = S_NORMAL
+-        mpz_mul(r.man, s.man, t.man)
+-        mpz_add(r.exp, s.exp, t.exp)
+-        if opts.prec:
+-            MPF_normalize(r, opts)
+-
+-cdef MPF_div(MPF *r, MPF *s, MPF *t, MPopts opts):
+-    """
+-    Set r = s / t, with correct rounding.
+-    """
+-    cdef int sign
+-    cdef long sbc, tbc, extra
+-    cdef mpz_t rem
+-    #assert (r is not s) and (r is not t)
+-    if s.special or t.special:
+-        _div_special(r, s, t)
+-        return
+-    r.special = S_NORMAL
+-    # Division by a power of two <=> shift exponents
+-    if mpz_cmp_si(t.man, 1) == 0:
+-        MPF_set(&tmp0, s)
+-        mpz_sub(tmp0.exp, tmp0.exp, t.exp)
+-        MPF_normalize(&tmp0, opts)
+-        MPF_set(r, &tmp0)
+-        return
+-    elif mpz_cmp_si(t.man, -1) == 0:
+-        MPF_neg(&tmp0, s)
+-        mpz_sub(tmp0.exp, tmp0.exp, t.exp)
+-        MPF_normalize(&tmp0, opts)
+-        MPF_set(r, &tmp0)
+-        return
+-    sign = mpz_sgn(s.man) != mpz_sgn(t.man)
+-    # Same strategy as for addition: if there is a remainder, perturb
+-    # the result a few bits outside the precision range before rounding
+-    extra = opts.prec - mpz_sizeinbase(s.man,2) + mpz_sizeinbase(t.man,2) + 5
+-    if extra < 5:
+-        extra = 5
+-    mpz_init(rem)
+-    mpz_mul_2exp(tmp0.man, s.man, extra)
+-    mpz_tdiv_qr(r.man, rem, tmp0.man, t.man)
+-    if mpz_sgn(rem):
+-        mpz_mul_2exp(r.man, r.man, 1)
+-        if sign:
+-            mpz_sub_ui(r.man, r.man, 1)
+-        else:
+-            mpz_add_ui(r.man, r.man, 1)
+-        extra  += 1
+-    mpz_clear(rem)
+-    mpz_sub(r.exp, s.exp, t.exp)
+-    mpz_sub_ui(r.exp, r.exp, extra)
+-    MPF_normalize(r, opts)
+-
+-cdef int MPF_sqrt(MPF *r, MPF *s, MPopts opts) noexcept:
+-    """
+-    Set r = sqrt(s), with correct rounding.
+-    """
+-    cdef long shift
+-    cdef mpz_t rem
+-    #assert r is not s
+-    if s.special:
+-        if s.special == S_ZERO or s.special == S_INF:
+-            MPF_set(r, s)
+-        else:
+-            MPF_set_nan(r)
+-        return 0
+-    if mpz_sgn(s.man) < 0:
+-        MPF_set_nan(r)
+-        return 1
+-    r.special = S_NORMAL
+-    if mpz_odd_p(s.exp):
+-        mpz_sub_ui(r.exp, s.exp, 1)
+-        mpz_mul_2exp(r.man, s.man, 1)
+-    elif mpz_cmp_ui(s.man, 1) == 0:
+-        # Square of a power of two
+-        mpz_set_ui(r.man, 1)
+-        mpz_tdiv_q_2exp(r.exp, s.exp, 1)
+-        MPF_normalize(r, opts)
+-        return 0
+-    else:
+-        mpz_set(r.man, s.man)
+-        mpz_set(r.exp, s.exp)
+-    shift = 2*opts.prec - mpz_sizeinbase(r.man,2) + 4
+-    if shift < 4:
+-        shift = 4
+-    shift += shift & 1
+-    mpz_mul_2exp(r.man, r.man, shift)
+-    if opts.rounding == ROUND_F or opts.rounding == ROUND_D:
+-        mpz_sqrt(r.man, r.man)
+-    else:
+-        mpz_init(rem)
+-        mpz_sqrtrem(r.man, rem, r.man)
+-        if mpz_sgn(rem):
+-            mpz_mul_2exp(r.man, r.man, 1)
+-            mpz_add_ui(r.man, r.man, 1)
+-            shift += 2
+-        mpz_clear(rem)
+-    mpz_add_si(r.exp, r.exp, -shift)
+-    mpz_tdiv_q_2exp(r.exp, r.exp, 1)
+-    MPF_normalize(r, opts)
+-    return 0
+-
+-cdef MPF_hypot(MPF *r, MPF *a, MPF *b, MPopts opts):
+-    """
+-    Set r = sqrt(a^2 + b^2)
+-    """
+-    cdef MPopts tmp_opts
+-    if a.special == S_ZERO:
+-        MPF_abs(r, b)
+-        MPF_normalize(r, opts)
+-        return
+-    if b.special == S_ZERO:
+-        MPF_abs(r, a)
+-        MPF_normalize(r, opts)
+-        return
+-    tmp_opts = opts
+-    tmp_opts.prec += 30
+-    MPF_mul(&tmp1, a, a, opts_exact)
+-    MPF_mul(&tmp2, b, b, opts_exact)
+-    MPF_add(r, &tmp1, &tmp2, tmp_opts)
+-    MPF_sqrt(r, r, opts)
+-
+-cdef MPF_pow_int(MPF *r, MPF *x, mpz_t n, MPopts opts):
+-    """
+-    Set r = x ** n. Currently falls back to mpmath.libmp
+-    unless n is tiny.
+-    """
+-    cdef long m, absm
+-    cdef unsigned long bc
+-    cdef int nsign
+-    if x.special != S_NORMAL:
+-        nsign = mpz_sgn(n)
+-        if x.special == S_ZERO:
+-            if nsign < 0:
+-                raise ZeroDivisionError
+-            elif nsign == 0:
+-                MPF_set(r, &MPF_C_1)
+-            else:
+-                MPF_set_zero(r)
+-        elif x.special == S_INF:
+-            if nsign > 0:
+-                MPF_set(r, x)
+-            elif nsign == 0:
+-                MPF_set_nan(r)
+-            else:
+-                MPF_set_zero(r)
+-        elif x.special == S_NINF:
+-            if nsign > 0:
+-                if mpz_odd_p(n):
+-                    MPF_set(r, x)
+-                else:
+-                    MPF_neg(r, x)
+-            elif nsign == 0:
+-                MPF_set_nan(r)
+-            else:
+-                MPF_set_zero(r)
+-        else:
+-            MPF_set_nan(r)
+-        return
+-    bc = mpz_sizeinbase(r.man,2)
+-    r.special = S_NORMAL
+-    if mpz_reasonable_shift(n):
+-        m = mpz_get_si(n)
+-        if m == 0:
+-            MPF_set(r, &MPF_C_1)
+-            return
+-        if m == 1:
+-            MPF_set(r, x)
+-            MPF_normalize(r, opts)
+-            return
+-        if m == 2:
+-            MPF_mul(r, x, x, opts)
+-            return
+-        if m == -1:
+-            MPF_div(r, &MPF_C_1, x, opts)
+-            return
+-        if m == -2:
+-            MPF_mul(r, x, x, opts_exact)
+-            MPF_div(r, &MPF_C_1, r, opts)
+-            return
+-        absm = abs(m)
+-        if bc * absm < 10000:
+-            mpz_pow_ui(r.man, x.man, absm)
+-            mpz_mul_ui(r.exp, x.exp, absm)
+-            if m < 0:
+-                MPF_div(r, &MPF_C_1, r, opts)
+-            else:
+-                MPF_normalize(r, opts)
+-            return
+-    r.special = S_NORMAL
+-    # (2^p)^n
+-    if mpz_cmp_si(x.man, 1) == 0:
+-        mpz_set(r.man, x.man)
+-        mpz_mul(r.exp, x.exp, n)
+-        return
+-    # (-2^p)^n
+-    if mpz_cmp_si(x.man, -1) == 0:
+-        if mpz_odd_p(n):
+-            mpz_set(r.man, x.man)
+-        else:
+-            mpz_neg(r.man, x.man)
+-        mpz_mul(r.exp, x.exp, n)
+-        return
+-    # TODO: implement efficiently here
+-    import mpmath.libmp
+-    MPF_set_tuple(r,
+-        mpmath.libmp.mpf_pow_int(MPF_to_tuple(x), mpzi(n),
+-        opts.prec, rndmode_to_python(opts.rounding)))
+-
+-cdef mpz_t _pi_value
+-cdef int _pi_prec = -1
+-
+-cdef mpz_t _ln2_value
+-cdef int _ln2_prec = -1
+-
+-cdef mpz_set_pi(mpz_t x, int prec):
+-    """
+-    Set x = pi as a fixed-point number.
+-    """
+-    global _pi_value
+-    global _pi_prec
+-    if prec <= _pi_prec:
+-        mpz_tdiv_q_2exp(x, _pi_value, _pi_prec-prec)
+-    else:
+-        from mpmath.libmp import pi_fixed
+-        if _pi_prec < 0:
+-            mpz_init(_pi_value)
+-        mpz_set_integer(_pi_value, pi_fixed(prec))
+-        mpz_set(x, _pi_value)
+-        _pi_prec = prec
+-
+-cdef mpz_set_ln2(mpz_t x, int prec):
+-    """
+-    Set x = ln(2) as a fixed-point number.
+-    """
+-    global _ln2_value
+-    global _ln2_prec
+-    if prec <= _ln2_prec:
+-        mpz_tdiv_q_2exp(x, _ln2_value, _ln2_prec-prec)
+-    else:
+-        from mpmath.libmp import ln2_fixed
+-        if _ln2_prec < 0:
+-            mpz_init(_ln2_value)
+-        mpz_set_integer(_ln2_value, ln2_fixed(prec))
+-        mpz_set(x, _ln2_value)
+-        _ln2_prec = prec
+-
+-cdef void _cy_exp_mpfr(mpz_t y, mpz_t x, int prec) noexcept:
+-    """
+-    Compute y = exp(x) for fixed-point numbers y and x using MPFR,
+-    assuming that no overflow will occur.
+-    """
+-    cdef mpfr_t yf, xf
+-    mpfr_init2(xf, mpz_bitcount(x)+2)
+-    mpfr_init2(yf, prec+2)
+-    mpfr_set_z(xf, x, MPFR_RNDN)
+-    mpfr_div_2exp(xf, xf, prec, MPFR_RNDN)
+-    mpfr_exp(yf, xf, MPFR_RNDN)
+-    mpfr_mul_2exp(yf, yf, prec, MPFR_RNDN)
+-    mpfr_get_z(y, yf, MPFR_RNDN)
+-    mpfr_clear(yf)
+-    mpfr_clear(xf)
+-
+-cdef cy_exp_basecase(mpz_t y, mpz_t x, int prec):
+-    """
+-    Compute y = exp(x) for fixed-point numbers y and x, assuming
+-    that x is small (|x| ~< 1). At small precisions, this function
+-    is equivalent to the exp_basecase function in
+-    mpmath.libmp.exp_fixed.
+-    """
+-    cdef int k, r, u
+-    cdef mpz_t s0, s1, x2, a
+-    # TODO: could use custom implementation here; for now switch to MPFR
+-    if prec > 2000:
+-        _cy_exp_mpfr(y, x, prec)
+-        return
+-    mpz_init(s0)
+-    mpz_init(s1)
+-    mpz_init(x2)
+-    mpz_init(a)
+-    r = <int>fsqrt(prec)
+-    prec += r
+-    mpz_set_ui(s0, 1)
+-    mpz_mul_2exp(s0, s0, prec)
+-    mpz_set(s1, s0)
+-    k = 2
+-    mpz_mul(x2, x, x)
+-    mpz_fdiv_q_2exp(x2, x2, prec)
+-    mpz_set(a, x2)
+-    while mpz_sgn(a):
+-        sig_check()
+-        mpz_fdiv_q_ui(a, a, k)
+-        mpz_add(s0, s0, a)
+-        k += 1
+-        mpz_fdiv_q_ui(a, a, k)
+-        mpz_add(s1, s1, a)
+-        k += 1
+-        mpz_mul(a, a, x2)
+-        mpz_fdiv_q_2exp(a, a, prec)
+-    mpz_mul(s1, s1, x)
+-    mpz_fdiv_q_2exp(s1, s1, prec)
+-    mpz_add(s0, s0, s1)
+-    u = r
+-    while r:
+-        sig_check()
+-        mpz_mul(s0, s0, s0)
+-        mpz_fdiv_q_2exp(s0, s0, prec)
+-        r -= 1
+-    mpz_fdiv_q_2exp(y, s0, u)
+-    mpz_clear(s0)
+-    mpz_clear(s1)
+-    mpz_clear(x2)
+-    mpz_clear(a)
+-
+-
+-cdef MPF_exp(MPF *y, MPF *x, MPopts opts):
+-    """
+-    Set y = exp(x).
+-    """
+-    cdef bint sign, is_int
+-    cdef long wp, wpmod, offset, mag
+-    cdef mpz_t t, u
+-    cdef tuple w
+-    if x.special:
+-        if x.special == S_ZERO:
+-            MPF_set_si(y, 1)
+-        elif x.special == S_NINF:
+-            MPF_set_zero(y)
+-        elif x.special == S_INF:
+-            MPF_set_inf(y)
+-        else:
+-            MPF_set_nan(y)
+-        return
+-    wp = opts.prec + 14
+-    sign = mpz_sgn(x.man) < 0
+-    is_int = mpz_sgn(x.exp) >= 0
+-    # note: bogus if not reasonable shift
+-    mag = mpz_bitcount(x.man) + mpz_get_si(x.exp)
+-    if (not mpz_reasonable_shift(x.exp)) or mag < -wp:
+-        if mpz_sgn(x.exp) <= 0:
+-            # perturb
+-            MPF_set_one(y)
+-            if opts.rounding != ROUND_N:
+-                mpz_mul_2exp(y.man, y.man, wp)
+-                if sign:
+-                    mpz_sub_ui(y.man, y.man, 1)
+-                else:
+-                    mpz_add_ui(y.man, y.man, 1)
+-                mpz_set_si(y.exp, -wp)
+-                MPF_normalize(y, opts)
+-            return
+-        else:
+-            raise OverflowError("exp of a huge number")
+-    #offset = mpz_get_si(x.exp) + wp
+-    mpz_init(t)
+-    if mag > 1:
+-        wpmod = wp + mag
+-        mpz_set_fixed(t, x, wpmod, False)
+-        mpz_init(u)
+-        mpz_set_ln2(u, wpmod)
+-        # y.exp, t = divmod(t, ln2)
+-        mpz_fdiv_qr(y.exp,t,t,u)
+-        mpz_clear(u)
+-        mpz_fdiv_q_2exp(t, t, mag)
+-    else:
+-        mpz_set_fixed(t, x, wp, False)
+-        mpz_set_ui(y.exp, 0)
+-    cy_exp_basecase(y.man, t, wp)
+-    mpz_add_si(y.exp, y.exp, -wp)
+-    y.special = S_NORMAL
+-    mpz_clear(t)
+-    MPF_normalize(y, opts)
+-
+-
+-cdef MPF_complex_sqrt(MPF *c, MPF *d, MPF *a, MPF *b, MPopts opts):
+-    """
+-    Set c+di = sqrt(a+bi).
+-
+-    c, a and d, b may be the same objects.
+-    """
+-    cdef int apos, bneg
+-    cdef MPF t, u, v
+-    cdef MPopts wpopts
+-    if b.special == S_ZERO:
+-        if a.special == S_ZERO:
+-            MPF_set_zero(c)
+-            MPF_set_zero(d)
+-        # a+bi, a < 0, b = 0
+-        elif MPF_sgn(a) < 0:
+-            MPF_abs(d, a)
+-            MPF_sqrt(d, d, opts)
+-            MPF_set_zero(c)
+-        # a > 0
+-        else:
+-            MPF_sqrt(c, a, opts)
+-            MPF_set_zero(d)
+-        return
+-    wpopts.prec = opts.prec + 20
+-    wpopts.rounding = ROUND_D
+-    MPF_init(&t)
+-    MPF_init(&u)
+-    MPF_init(&v)
+-    apos = MPF_sgn(a) >= 0
+-    bneg = MPF_sgn(b) <= 0
+-    if apos:
+-        # real part
+-        MPF_hypot(&t, a, b, wpopts)  # t = abs(a+bi) + a
+-        MPF_add(&t, &t, a, wpopts)
+-        MPF_set(&u, &t)
+-        mpz_sub_ui(u.exp, u.exp, 1)  # u = t / 2
+-        MPF_sqrt(c, &u, opts)   # re = sqrt(u)
+-        # imag part
+-        mpz_add_ui(t.exp, t.exp, 1)  # t = 2*t
+-        MPF_sqrt(&u, &t, wpopts)   # u = sqrt(t)
+-        MPF_div(d, b, &u, opts) # im = b / u
+-    else:
+-        MPF_set(&v, b)
+-        MPF_hypot(&t, a, b, wpopts)  # t = abs(a+bi) - a
+-        MPF_sub(&t, &t, a, wpopts)
+-        MPF_set(&u, &t)
+-        mpz_sub_ui(u.exp, u.exp, 1)  # u = t / 2
+-        MPF_sqrt(d, &u, opts)  # im = sqrt(u)
+-        mpz_add_ui(t.exp, t.exp, 1)  # t = 2*t
+-        MPF_sqrt(&u, &t, wpopts)   # u = sqrt(t)
+-        MPF_div(c, &v, &u, opts)  # re = b / u
+-        if bneg:
+-            MPF_neg(c, c)
+-            MPF_neg(d, d)
+-    MPF_clear(&t)
+-    MPF_clear(&u)
+-    MPF_clear(&v)
+-
+-cdef int MPF_get_mpfr_overflow(mpfr_t y, MPF *x) noexcept:
+-    """
+-    Store the mpmath number x exactly in the MPFR variable y. The precision
+-    of y will be adjusted if necessary. If the exponent overflows, only
+-    the mantissa is stored and 1 is returned; if no overflow occurs,
+-    the function returns 0.
+-    """
+-    cdef long prec, exp
+-    if x.special != S_NORMAL:
+-        if x.special == S_ZERO:
+-            mpfr_set_ui(y, 0, MPFR_RNDN)
+-        elif x.special == S_INF:
+-            mpfr_set_inf(y, 1)
+-        elif x.special == S_NINF:
+-            mpfr_set_inf(y, -1)
+-        else:
+-            mpfr_set_nan(y)
+-        return 0
+-    prec = mpz_bitcount(x.man)
+-    # Minimum precision for MPFR
+-    if prec < 2:
+-        prec = 2
+-    mpfr_set_prec(y, prec)
+-    mpfr_set_z(y, x.man, MPFR_RNDN)
+-    if mpz_reasonable_shift(x.exp):
+-        exp = mpz_get_si(x.exp)
+-        if exp >= 0:
+-            mpfr_mul_2exp(y, y, exp, MPFR_RNDN)
+-        else:
+-            mpfr_div_2exp(y, y, -exp, MPFR_RNDN)
+-        return 0
+-    else:
+-        return 1
+-
+-cdef MPF_set_mpfr(MPF *y, mpfr_t x, MPopts opts):
+-    """
+-    Convert the MPFR number x to a normalized MPF y.
+-    inf/nan and zero are handled.
+-    """
+-    cdef long exp
+-    # TODO: use mpfr_regular_p with MPFR 3
+-    if mpfr_nan_p(x):
+-        MPF_set_nan(y)
+-        return
+-    if mpfr_inf_p(x):
+-        if mpfr_sgn(x) > 0:
+-            MPF_set_inf(y)
+-        else:
+-            MPF_set_ninf(y)
+-        return
+-    if mpfr_zero_p(x):
+-        MPF_set_zero(y)
+-        return
+-    exp = mpfr_get_z_exp(y.man, x)
+-    mpz_set_si(y.exp, exp)
+-    y.special = S_NORMAL
+-    MPF_normalize(y, opts)
+-
+-cdef int MPF_log(MPF *y, MPF *x, MPopts opts) noexcept:
+-    """
+-    Set y = log(|x|). Returns 1 if x is negative.
+-    """
+-    cdef MPF t
+-    cdef bint negative, overflow
+-    cdef mpfr_rnd_t rndmode
+-    cdef mpfr_t yy, xx
+-    if x.special != S_NORMAL:
+-        if x.special == S_ZERO:
+-            MPF_set_ninf(y)
+-            return 0
+-        if x.special == S_INF:
+-            MPF_set_inf(y)
+-            return 0
+-        if x.special == S_NAN:
+-            MPF_set_nan(y)
+-            return 0
+-        if x.special == S_NINF:
+-            MPF_set_inf(y)
+-            return 1
+-
+-    negative = MPF_sgn(x) < 0
+-    mpfr_init2(xx, opts.prec)
+-    mpfr_init2(yy, opts.prec)
+-
+-    overflow = MPF_get_mpfr_overflow(xx, x)
+-    rndmode = rndmode_to_mpfr(opts.rounding)
+-
+-    if overflow:
+-        MPF_init(&t)
+-        # Copy x exponent in case x and y are aliased
+-        mpz_set(t.exp, x.exp)
+-
+-        # log(m * 2^e) = log(m) + e*log(2)
+-        mpfr_abs(xx, xx, MPFR_RNDN)
+-        mpfr_log(yy, xx, rndmode)
+-        MPF_set_mpfr(y, yy, opts)
+-
+-        mpz_set_ln2(t.man, opts.prec+20)
+-        mpz_mul(t.man, t.man, t.exp)
+-        mpz_set_si(t.exp, -(opts.prec+20))
+-        t.special = S_NORMAL
+-
+-        MPF_add(y, y, &t, opts)
+-        MPF_clear(&t)
+-    else:
+-        mpfr_abs(xx, xx, MPFR_RNDN)
+-        mpfr_log(yy, xx, rndmode)
+-        MPF_set_mpfr(y, yy, opts)
+-
+-    mpfr_clear(xx)
+-    mpfr_clear(yy)
+-    return negative
+-
+-cdef MPF_set_pi(MPF *x, MPopts opts):
+-    """
+-    Set x = pi.
+-    """
+-    x.special = S_NORMAL
+-    mpz_set_pi(x.man, (opts.prec+20))
+-    mpz_set_si(x.exp, -(opts.prec+20))
+-    MPF_normalize(x, opts)
+-
+-cdef MPF_set_ln2(MPF *x, MPopts opts):
+-    """
+-    Set x = ln(2).
+-    """
+-    x.special = S_NORMAL
+-    mpz_set_ln2(x.man, (opts.prec+20))
+-    mpz_set_si(x.exp, -(opts.prec+20))
+-    MPF_normalize(x, opts)
+-
+-
+-def exp_fixed(Integer x, int prec, ln2=None):
+-    """
+-    Return a fixed-point approximation of exp(x) where x is a fixed-point
+-    number.
+-
+-    EXAMPLES::
+-
+-        sage: from sage.libs.mpmath.ext_impl import exp_fixed
+-        sage: y = exp_fixed(1<<53, 53)
+-        sage: float(y) / 2^53
+-        2.718281828459044
+-    """
+-    cdef Integer v
+-    cdef mpz_t n, t
+-    cdef long nn
+-    mpz_init(n)
+-    mpz_init(t)
+-    if ln2 is None:
+-        mpz_set_ln2(t, prec)
+-        mpz_fdiv_qr(n, t, x.value, t)
+-    else:
+-        mpz_fdiv_qr(n, t, x.value, (<Integer>ln2).value)
+-    nn = mpz_get_si(n)
+-    v = PY_NEW(Integer)
+-    cy_exp_basecase(v.value, t, prec)
+-    if nn >= 0:
+-        mpz_mul_2exp(v.value, v.value, nn)
+-    else:
+-        mpz_fdiv_q_2exp(v.value, v.value, -nn)
+-    mpz_clear(t)
+-    mpz_clear(n)
+-    return v
+-
+-
+-def cos_sin_fixed(Integer x, int prec, pi2=None):
+-    """
+-    Return fixed-point approximations of cos(x), sin(x) where
+-    x is a fixed-point number.
+-
+-    EXAMPLES::
+-
+-        sage: from sage.libs.mpmath.ext_impl import cos_sin_fixed
+-        sage: c, s = cos_sin_fixed(1<<53, 53)
+-        sage: float(c) / 2^53
+-        0.5403023058681398
+-        sage: float(s) / 2^53
+-        0.8414709848078965
+-    """
+-    cdef Integer cv, sv
+-    cdef mpfr_t t, cf, sf
+-    mpfr_init2(t, mpz_bitcount(x.value)+2)
+-    mpfr_init2(cf, prec)
+-    mpfr_init2(sf, prec)
+-    mpfr_set_z(t, x.value, MPFR_RNDN)
+-    mpfr_div_2exp(t, t, prec, MPFR_RNDN)
+-    mpfr_sin_cos(sf, cf, t, MPFR_RNDN)
+-    mpfr_mul_2exp(cf, cf, prec, MPFR_RNDN)
+-    mpfr_mul_2exp(sf, sf, prec, MPFR_RNDN)
+-    cv = PY_NEW(Integer)
+-    sv = PY_NEW(Integer)
+-    mpfr_get_z(cv.value, cf, MPFR_RNDN)
+-    mpfr_get_z(sv.value, sf, MPFR_RNDN)
+-    mpfr_clear(t)
+-    mpfr_clear(cf)
+-    mpfr_clear(sf)
+-    return cv, sv
+-
+-
+-DEF MAX_LOG_INT_CACHE = 2000
+-
+-cdef mpz_t log_int_cache[MAX_LOG_INT_CACHE+1]
+-cdef long log_int_cache_prec[MAX_LOG_INT_CACHE+1]
+-cdef bint log_int_cache_initialized = 0
+-
+-cdef mpz_log_int(mpz_t v, mpz_t n, int prec):
+-    """
+-    Set v = log(n) where n is an integer and v is a fixed-point number
+-    with the specified precision.
+-    """
+-    cdef mpfr_t f
+-    mpfr_init2(f, prec+15)
+-    mpfr_set_z(f, n, MPFR_RNDN)
+-    mpfr_log(f, f, MPFR_RNDN)
+-    mpfr_mul_2exp(f, f, prec, MPFR_RNDN)
+-    mpfr_get_z(v, f, MPFR_RNDN)
+-    mpfr_clear(f)
+-
+-
+-def log_int_fixed(n, long prec, ln2=None):
+-    """
+-    Return fixed-point approximation of log(n).
+-
+-    EXAMPLES::
+-
+-        sage: from sage.libs.mpmath.ext_impl import log_int_fixed
+-        sage: float(log_int_fixed(5, 53)) / 2^53
+-        1.6094379124341003
+-        sage: float(log_int_fixed(5, 53)) / 2^53   # exercise cache
+-        1.6094379124341003
+-    """
+-    global log_int_cache_initialized
+-    cdef Integer t
+-    cdef int i
+-    t = PY_NEW(Integer)
+-    mpz_set_integer(t.value, n)
+-    if mpz_sgn(t.value) <= 0:
+-        mpz_set_ui(t.value, 0)
+-    elif mpz_cmp_ui(t.value, MAX_LOG_INT_CACHE) <= 0:
+-        if not log_int_cache_initialized:
+-            for i in range(MAX_LOG_INT_CACHE+1):
+-                mpz_init(log_int_cache[i])
+-                log_int_cache_prec[i] = 0
+-            log_int_cache_initialized = 1
+-        i = mpz_get_si(t.value)
+-        if log_int_cache_prec[i] < prec:
+-            mpz_log_int(log_int_cache[i], t.value, prec+64)
+-            log_int_cache_prec[i] = prec+64
+-        mpz_tdiv_q_2exp(t.value, log_int_cache[i], log_int_cache_prec[i]-prec)
+-
+-    else:
+-        mpz_log_int(t.value, t.value, prec)
+-    return t
+-
+-
+-cdef _MPF_cos_python(MPF *c, MPF *x, MPopts opts):
+-    """
+-    Compute c = cos(x) by calling the mpmath.libmp Python implementation.
+-    """
+-    from mpmath.libmp.libelefun import mpf_cos_sin
+-    ct = mpf_cos_sin(MPF_to_tuple(x), opts.prec,
+-            rndmode_to_python(opts.rounding), 1, False)
+-    MPF_set_tuple(c, ct)
+-
+-cdef _MPF_sin_python(MPF *s, MPF *x, MPopts opts):
+-    """
+-    Compute s = sin(x) by calling the mpmath.libmp Python implementation.
+-    """
+-    from mpmath.libmp.libelefun import mpf_cos_sin
+-    st = mpf_cos_sin(MPF_to_tuple(x), opts.prec,
+-            rndmode_to_python(opts.rounding), 2, False)
+-    MPF_set_tuple(s, st)
+-
+-
+-cdef MPF_cos(MPF *c, MPF *x, MPopts opts):
+-    """
+-    Set c = cos(x)
+-    """
+-    cdef mpfr_t cf, xf
+-    cdef bint overflow
+-    if x.special != S_NORMAL:
+-        if x.special == S_ZERO:
+-            MPF_set_one(c)
+-        else:
+-            MPF_set_nan(c)
+-        return
+-    mpfr_init(xf)
+-    mpfr_init2(cf, opts.prec)
+-    overflow = MPF_get_mpfr_overflow(xf, x)
+-    if overflow or opts.rounding == ROUND_U:
+-        _MPF_cos_python(c, x, opts)
+-    else:
+-        mpfr_cos(cf, xf, rndmode_to_mpfr(opts.rounding))
+-        MPF_set_mpfr(c, cf, opts)
+-    mpfr_clear(xf)
+-    mpfr_clear(cf)
+-
+-cdef MPF_sin(MPF *s, MPF *x, MPopts opts):
+-    """
+-    Set s = sin(x)
+-    """
+-    cdef mpfr_t sf, xf
+-    cdef bint overflow
+-    if x.special != S_NORMAL:
+-        if x.special == S_ZERO:
+-            MPF_set_zero(s)
+-        else:
+-            MPF_set_nan(s)
+-        return
+-    mpfr_init(xf)
+-    mpfr_init2(sf, opts.prec)
+-    overflow = MPF_get_mpfr_overflow(xf, x)
+-    if overflow or opts.rounding == ROUND_U:
+-        _MPF_sin_python(s, x, opts)
+-    else:
+-        mpfr_sin(sf, xf, rndmode_to_mpfr(opts.rounding))
+-        MPF_set_mpfr(s, sf, opts)
+-    mpfr_clear(xf)
+-    mpfr_clear(sf)
+-
+-cdef MPF_cos_sin(MPF *c, MPF *s, MPF *x, MPopts opts):
+-    """
+-    Set c = cos(x), s = sin(x)
+-    """
+-    cdef mpfr_t cf, sf, xf
+-    cdef bint overflow
+-    if x.special != S_NORMAL:
+-        if x.special == S_ZERO:
+-            MPF_set_one(c)
+-            MPF_set_zero(s)
+-        else:
+-            MPF_set_nan(c)
+-            MPF_set_nan(s)
+-        return
+-    mpfr_init(xf)
+-    mpfr_init2(sf, opts.prec)
+-    mpfr_init2(cf, opts.prec)
+-    overflow = MPF_get_mpfr_overflow(xf, x)
+-    if overflow or opts.rounding == ROUND_U:
+-        _MPF_cos_python(c, x, opts)
+-        _MPF_sin_python(s, x, opts)
+-    else:
+-        mpfr_sin_cos(sf, cf, xf, rndmode_to_mpfr(opts.rounding))
+-        MPF_set_mpfr(s, sf, opts)
+-        MPF_set_mpfr(c, cf, opts)
+-    mpfr_clear(xf)
+-    mpfr_clear(cf)
+-    mpfr_clear(sf)
+-
+-
+-cdef MPF_complex_exp(MPF *re, MPF *im, MPF *a, MPF *b, MPopts opts):
+-    """
+-    Set re+im*i = exp(a+bi)
+-    """
+-    cdef MPF mag, c, s
+-    cdef MPopts wopts
+-    if a.special == S_ZERO:
+-        MPF_cos_sin(re, im, b, opts)
+-        return
+-    if b.special == S_ZERO:
+-        MPF_exp(re, a, opts)
+-        MPF_set_zero(im)
+-        return
+-    MPF_init(&mag)
+-    MPF_init(&c)
+-    MPF_init(&s)
+-    wopts = opts
+-    wopts.prec += 4
+-    MPF_exp(&mag, a, wopts)
+-    MPF_cos_sin(&c, &s, b, wopts)
+-    MPF_mul(re, &mag, &c, opts)
+-    MPF_mul(im, &mag, &s, opts)
+-    MPF_clear(&mag)
+-    MPF_clear(&c)
+-    MPF_clear(&s)
+-
+-cdef int MPF_pow(MPF *z, MPF *x, MPF *y, MPopts opts) except -1:
+-    """
+-    Set z = x^y for real x and y and returns 0 if the result is real-valued.
+-    If the result is complex, does nothing and returns 1.
+-    """
+-    cdef MPopts wopts
+-    cdef mpz_t t
+-    cdef MPF w
+-    cdef int xsign, ysign
+-    cdef mpz_t tm
+-
+-    # Integer exponentiation, if reasonable
+-    if y.special == S_NORMAL and mpz_sgn(y.exp) >= 0:
+-        mpz_init(tm)
+-        # check if size is reasonable
+-        mpz_add_ui(tm, y.exp, mpz_bitcount(y.man))
+-        mpz_abs(tm, tm)
+-        if mpz_cmp_ui(tm, 10000) < 0:
+-            # man * 2^exp
+-            mpz_mul_2exp(tm, y.man, mpz_get_ui(y.exp))
+-            MPF_pow_int(z, x, tm, opts)
+-            mpz_clear(tm)
+-            return 0
+-        mpz_clear(tm)
+-
+-    # x ^ 0
+-    if y.special == S_ZERO:
+-        if x.special == S_NORMAL or x.special == S_ZERO:
+-            MPF_set_one(z)
+-        else:
+-            MPF_set_nan(z)
+-        return 0
+-
+-    xsign = MPF_sgn(x)
+-    ysign = MPF_sgn(y)
+-
+-    if xsign < 0:
+-        return 1
+-
+-    # Square root or integer power thereof
+-    if y.special == S_NORMAL and mpz_cmp_si(y.exp, -1) == 0:
+-        # x^(1/2)
+-        if mpz_cmp_ui(y.man, 1) == 0:
+-            MPF_sqrt(z, x, opts)
+-            return 0
+-        # x^(-1/2)
+-        if mpz_cmp_si(y.man, -1) == 0:
+-            wopts = opts
+-            wopts.prec += 10
+-            wopts.rounding = reciprocal_rnd(wopts.rounding)
+-            MPF_sqrt(z, x, wopts)
+-            MPF_div(z, &MPF_C_1, z, opts)
+-            return 0
+-        # x^(n/2)
+-        wopts = opts
+-        wopts.prec += 10
+-        if mpz_sgn(y.man) < 0:
+-            wopts.rounding = reciprocal_rnd(wopts.rounding)
+-        mpz_init_set(t, y.man)
+-        MPF_sqrt(z, x, wopts)
+-        MPF_pow_int(z, z, t, opts)
+-        mpz_clear(t)
+-        return 0
+-
+-    if x.special != S_NORMAL or y.special != S_NORMAL:
+-        if x.special == S_NAN or y.special == S_NAN:
+-            MPF_set_nan(z)
+-            return 0
+-        if y.special == S_ZERO:
+-            if x.special == S_NORMAL or x.special == S_ZERO:
+-                MPF_set_one(z)
+-            else:
+-                MPF_set_nan(z)
+-            return 0
+-        if x.special == S_ZERO and y.special == S_NORMAL:
+-            if mpz_sgn(y.man) > 0:
+-                MPF_set_zero(z)
+-            return 0
+-
+-    wopts = opts
+-    wopts.prec += 10
+-    MPF_init(&w)
+-    MPF_log(&w, x, wopts)
+-    MPF_mul(&w, &w, y, opts_exact)
+-    MPF_exp(z, &w, opts)
+-    MPF_clear(&w)
+-    return 0
+-
+-cdef MPF_complex_square(MPF *re, MPF *im, MPF *a, MPF *b, MPopts opts):
+-    """
+-    Set re+im*i = (a+bi)^2 = a^2-b^2, 2ab*i.
+-    """
+-    cdef MPF t, u
+-    MPF_init(&t)
+-    MPF_init(&u)
+-    MPF_mul(&t,a,a,opts_exact)
+-    MPF_mul(&u,b,b,opts_exact)
+-    MPF_sub(re, &t, &u, opts)
+-    MPF_mul(im, a, b, opts)
+-    if im.special == S_NORMAL:
+-        mpz_add_ui(im.exp, im.exp, 1)
+-    MPF_clear(&t)
+-    MPF_clear(&u)
+-
+-
+-cdef MPF_complex_reciprocal(MPF *re, MPF *im, MPF *a, MPF *b, MPopts opts):
+-    """
+-    Set re+im*i = 1/(a+bi), i.e. compute the reciprocal of
+-    a complex number.
+-    """
+-    cdef MPopts wopts
+-    cdef MPF t, u, m
+-    wopts = opts
+-    wopts.prec += 10
+-    MPF_init(&t)
+-    MPF_init(&u)
+-    MPF_init(&m)
+-    MPF_mul(&t, a, a,opts_exact)
+-    MPF_mul(&u, b, b,opts_exact)
+-    MPF_add(&m, &t, &u,wopts)
+-    MPF_div(&t, a, &m, opts)
+-    MPF_div(&u, b, &m, opts)
+-    MPF_set(re, &t)
+-    MPF_neg(im, &u)
+-    MPF_clear(&t)
+-    MPF_clear(&u)
+-    MPF_clear(&m)
+-
+-
+-cdef MPF_complex_pow_int(MPF *zre, MPF *zim, MPF *xre, MPF *xim, mpz_t n, MPopts opts):
+-    """
+-    Set zre+zim*i = (xre+xim) ^ n, i.e. raise a complex number to an integer power.
+-    """
+-    cdef MPopts wopts
+-    cdef long m
+-
+-    if xim.special == S_ZERO:
+-        MPF_pow_int(zre, xre, n, opts)
+-        MPF_set_zero(zim)
+-        return
+-
+-    if xre.special == S_ZERO:
+-        # n % 4
+-        m = mpz_get_si(n) % 4
+-        if m == 0:
+-            MPF_pow_int(zre, xim, n, opts)
+-            MPF_set_zero(zim)
+-            return
+-        if m == 1:
+-            MPF_set_zero(zre)
+-            MPF_pow_int(zim, xim, n, opts)
+-            return
+-        if m == 2:
+-            MPF_pow_int(zre, xim, n, opts)
+-            MPF_neg(zre, zre)
+-            MPF_set_zero(zim)
+-            return
+-        if m == 3:
+-            MPF_set_zero(zre)
+-            MPF_pow_int(zim, xim, n, opts)
+-            MPF_neg(zim, zim)
+-            return
+-
+-    if mpz_reasonable_shift(n):
+-        m = mpz_get_si(n)
+-        if m == 0:
+-            MPF_set_one(zre)
+-            MPF_set_zero(zim)
+-            return
+-        if m == 1:
+-            MPF_pos(zre, xre, opts)
+-            MPF_pos(zim, xim, opts)
+-            return
+-        if m == 2:
+-            MPF_complex_square(zre, zim, xre, xim, opts)
+-            return
+-        if m == -1:
+-            MPF_complex_reciprocal(zre, zim, xre, xim, opts)
+-            return
+-        if m == -2:
+-            wopts = opts
+-            wopts.prec += 10
+-            MPF_complex_square(zre, zim, xre, xim, wopts)
+-            MPF_complex_reciprocal(zre, zim, zre, zim, opts)
+-            return
+-
+-    xret = MPF_to_tuple(xre)
+-    ximt = MPF_to_tuple(xim)
+-    from mpmath.libmp import mpc_pow_int
+-    vr, vi = mpc_pow_int((xret, ximt), mpzi(n),
+-                         opts.prec, rndmode_to_python(opts.rounding))
+-    MPF_set_tuple(zre, vr)
+-    MPF_set_tuple(zim, vi)
+-
+-
+-cdef MPF_complex_pow_re(MPF *zre, MPF *zim, MPF *xre, MPF *xim, MPF *y, MPopts opts):
+-    """
+-    Set (zre+zim*i) = (xre+xim*i) ^ y, i.e. raise a complex number
+-    to a real power.
+-    """
+-
+-    cdef mpz_t tm
+-    cdef MPopts wopts
+-
+-    if y.special == S_ZERO:
+-        if xre.special == S_NORMAL and xim.special == S_NORMAL:
+-            # x ^ 0
+-            MPF_set_one(zre)
+-            MPF_set_zero(zim)
+-            return
+-
+-    wopts = opts
+-    wopts.prec += 10
+-
+-    if y.special == S_NORMAL:
+-        # Integer
+-        if mpz_cmp_ui(y.exp, 0) >= 0 and mpz_reasonable_shift(y.exp):
+-            mpz_init_set(tm, y.man)
+-            mpz_mul_2exp(tm, tm, mpz_get_ui(y.exp))
+-            MPF_complex_pow_int(zre, zim, xre, xim, tm, opts)
+-            mpz_clear(tm)
+-            return
+-        # x ^ (n/2)
+-        if mpz_cmp_si(y.exp, -1) == 0:
+-            mpz_init_set(tm, y.man)
+-            MPF_complex_sqrt(zre, zim, xre, xim, wopts)
+-            MPF_complex_pow_int(zre, zim, zre, zim, tm, opts)
+-            mpz_clear(tm)
+-            return
+-
+-    xret = MPF_to_tuple(xre)
+-    ximt = MPF_to_tuple(xim)
+-    yret = MPF_to_tuple(y)
+-    from mpmath.libmp import mpc_pow_mpf
+-    vr, vi = mpc_pow_mpf((xret, ximt), yret,
+-                         opts.prec, rndmode_to_python(opts.rounding))
+-    MPF_set_tuple(zre, vr)
+-    MPF_set_tuple(zim, vi)
+-
+-
+-cdef MPF_complex_pow(MPF *zre, MPF *zim, MPF *xre, MPF *xim, MPF *yre, MPF *yim, MPopts opts):
+-    """
+-    Set (zre + zim*i) = (xre+xim*i) ^ (yre+yim*i).
+-    """
+-    if yim.special == S_ZERO:
+-        MPF_complex_pow_re(zre, zim, xre, xim, yre, opts)
+-        return
+-    xret = MPF_to_tuple(xre)
+-    ximt = MPF_to_tuple(xim)
+-    yret = MPF_to_tuple(yre)
+-    yimt = MPF_to_tuple(yim)
+-    from mpmath.libmp import mpc_pow
+-    vr, vi = mpc_pow((xret, ximt), (yret, yimt),
+-                     opts.prec, rndmode_to_python(opts.rounding))
+-    MPF_set_tuple(zre, vr)
+-    MPF_set_tuple(zim, vi)
+-
+-
+-cdef mpz_set_tuple_fixed(mpz_t x, tuple t, long prec):
+-    """
+-    Set the integer x to a fixed-point number with specified precision
+-    and the value of t = (sign,man,exp,bc). Truncating division is used
+-    if the value cannot be represented exactly.
+-    """
+-    cdef long offset
+-    sign, man, exp, bc = t
+-    mpz_set_integer(x, man)
+-    if sign:
+-        mpz_neg(x, x)
+-    offset = exp + prec
+-    if offset >= 0:
+-        mpz_mul_2exp(x, x, offset)
+-    else:
+-        mpz_tdiv_q_2exp(x, x, -offset)
+-
+-cdef mpz_set_complex_tuple_fixed(mpz_t x, mpz_t y, tuple t, long prec):
+-    """
+-    Set the integers (x,y) to fixed-point numbers with the values of
+-    the mpf pair t = ((xsign,xman,xexp,xbc), (ysign,yman,yexp,ybc)).
+-    """
+-    mpz_set_tuple_fixed(x, t[0], prec)
+-    mpz_set_tuple_fixed(y, t[1], prec)
+-
+-cdef MPF_set_fixed(MPF *x, mpz_t man, long wp, long prec, int rnd):
+-    """
+-    Set value of an MPF given a fixed-point mantissa of precision wp,
+-    rounding to the given precision and rounding mode.
+-    """
+-    cdef MPopts opts
+-    opts.prec = prec
+-    opts.rounding = rnd
+-    x.special = S_NORMAL
+-    mpz_set(x.man, man)
+-    mpz_set_si(x.exp, -wp)
+-    MPF_normalize(x, opts)
+-
+-# TODO: we should allocate these dynamically
+-DEF MAX_PARAMS = 128
+-cdef mpz_t AINT[MAX_PARAMS]
+-cdef mpz_t BINT[MAX_PARAMS]
+-cdef mpz_t AP[MAX_PARAMS]
+-cdef mpz_t AQ[MAX_PARAMS]
+-cdef mpz_t BP[MAX_PARAMS]
+-cdef mpz_t BQ[MAX_PARAMS]
+-cdef mpz_t AREAL[MAX_PARAMS]
+-cdef mpz_t BREAL[MAX_PARAMS]
+-cdef mpz_t ACRE[MAX_PARAMS]
+-cdef mpz_t ACIM[MAX_PARAMS]
+-cdef mpz_t BCRE[MAX_PARAMS]
+-cdef mpz_t BCIM[MAX_PARAMS]
+-
+-
+-cdef MPF_hypsum(MPF *a, MPF *b, int p, int q, param_types, str ztype, coeffs, z,
+-    long prec, long wp, long epsshift, dict magnitude_check, kwargs):
+-    """
+-    Evaluates a+bi = pFq(..., z) by summing the hypergeometric
+-    series in fixed-point arithmetic.
+-
+-    This basically a Cython version of
+-    mpmath.libmp.libhyper.make_hyp_summator(). It should produce identical
+-    results (the calculations are exactly the same, and the same rounding
+-    is used for divisions).
+-
+-    This function is not intended to be called directly; it is wrapped
+-    by the hypsum_internal function in ext_main.pyx.
+-    """
+-    cdef long i, j, k, n, p_mag, cancellable_real, MAX, magn
+-    cdef int have_complex_param, have_complex_arg, have_complex
+-
+-    cdef mpz_t SRE, SIM, PRE, PIM, ZRE, ZIM, TRE, TIM, URE, UIM, MUL, DIV, HIGH, LOW, one
+-    # Count number of parameters
+-    cdef int aint, bint, arat, brat, areal, breal, acomplex, bcomplex
+-    cdef int have_multiplier
+-
+-    if p >= MAX_PARAMS or q >= MAX_PARAMS:
+-        raise NotImplementedError("too many hypergeometric function parameters")
+-
+-    have_complex_param = 'C' in param_types
+-    have_complex_arg = ztype == 'C'
+-    have_complex = have_complex_param or have_complex_arg
+-
+-    mpz_init(one)
+-    mpz_init(SRE)
+-    mpz_init(SIM)
+-    mpz_init(PRE)
+-    mpz_init(PIM)
+-    mpz_init(ZRE)
+-    mpz_init(ZIM)
+-    mpz_init(MUL)
+-    mpz_init(DIV)
+-    mpz_init(HIGH)
+-    mpz_init(LOW)
+-    mpz_init(TRE)
+-    mpz_init(TIM)
+-    mpz_init(URE)
+-    mpz_init(UIM)
+-
+-    aint = bint = arat = brat = areal = breal = acomplex = bcomplex = 0
+-
+-    MAX = kwargs.get('maxterms', wp*100)
+-    mpz_set_ui(HIGH, 1)
+-    mpz_mul_2exp(HIGH, HIGH, epsshift)
+-    mpz_neg(LOW, HIGH)
+-
+-    mpz_set_ui(one, 1)
+-    mpz_mul_2exp(one, one, wp)
+-    mpz_set(SRE, one)
+-    mpz_set(PRE, one)
+-
+-    # Copy input data to mpzs
+-    if have_complex_arg:
+-        mpz_set_complex_tuple_fixed(ZRE, ZIM, z, wp)
+-    else:
+-        mpz_set_tuple_fixed(ZRE, z, wp)
+-    for i in range(p):
+-        sig_check()
+-        if param_types[i] == 'Z':
+-            mpz_init(AINT[aint])
+-            mpz_set_integer(AINT[aint], coeffs[i])
+-            aint += 1
+-        elif param_types[i] == 'Q':
+-            mpz_init(AP[arat])
+-            mpz_init(AQ[arat])
+-            __p, __q = coeffs[i]._mpq_
+-            mpz_set_integer(AP[arat], __p)
+-            mpz_set_integer(AQ[arat], __q)
+-            arat += 1
+-        elif param_types[i] == 'R':
+-            mpz_init(AREAL[areal])
+-            mpz_set_tuple_fixed(AREAL[areal], coeffs[i]._mpf_, wp)
+-            areal += 1
+-        elif param_types[i] == 'C':
+-            mpz_init(ACRE[acomplex])
+-            mpz_init(ACIM[acomplex])
+-            mpz_set_complex_tuple_fixed(ACRE[acomplex], ACIM[acomplex], coeffs[i]._mpc_, wp)
+-            acomplex += 1
+-        else:
+-            raise ValueError
+-    for i in range(p,p+q):
+-        sig_check()
+-        if param_types[i] == 'Z':
+-            mpz_init(BINT[bint])
+-            mpz_set_integer(BINT[bint], coeffs[i])
+-            bint += 1
+-        elif param_types[i] == 'Q':
+-            mpz_init(BP[brat])
+-            mpz_init(BQ[brat])
+-            __p, __q = coeffs[i]._mpq_
+-            mpz_set_integer(BP[brat], __p)
+-            mpz_set_integer(BQ[brat], __q)
+-            brat += 1
+-        elif param_types[i] == 'R':
+-            mpz_init(BREAL[breal])
+-            mpz_set_tuple_fixed(BREAL[breal], coeffs[i]._mpf_, wp)
+-            breal += 1
+-        elif param_types[i] == 'C':
+-            mpz_init(BCRE[bcomplex])
+-            mpz_init(BCIM[bcomplex])
+-            mpz_set_complex_tuple_fixed(BCRE[bcomplex], BCIM[bcomplex], coeffs[i]._mpc_, wp)
+-            bcomplex += 1
+-        else:
+-            raise ValueError
+-
+-    cancellable_real = min(areal, breal)
+-
+-    # Main loop
+-    for n in range(1, 10**8):
+-
+-        if n in magnitude_check:
+-            p_mag = mpz_bitcount(PRE)
+-            if have_complex:
+-                p_mag = max(p_mag, mpz_bitcount(PIM))
+-            magnitude_check[n] = wp - p_mag
+-
+-        # Update rational part of product
+-        mpz_set_ui(MUL, 1)
+-        mpz_set_ui(DIV, n)
+-
+-        for i in range(aint): mpz_mul(MUL, MUL, AINT[i])
+-        for i in range(arat): mpz_mul(MUL, MUL, AP[i])
+-        for i in range(brat): mpz_mul(MUL, MUL, BQ[i])
+-        for i in range(bint): mpz_mul(DIV, DIV, BINT[i])
+-        for i in range(brat): mpz_mul(DIV, DIV, BP[i])
+-        for i in range(arat): mpz_mul(DIV, DIV, AQ[i])
+-
+-        # Check for singular terms
+-        if mpz_sgn(DIV) == 0:
+-            if mpz_sgn(MUL) == 0:
+-                break
+-            raise ZeroDivisionError
+-
+-        # Multiply real factors
+-        for k in range(cancellable_real):
+-            sig_check()
+-            mpz_mul(PRE, PRE, AREAL[k])
+-            mpz_fdiv_q(PRE, PRE, BREAL[k])
+-        for k in range(cancellable_real, areal):
+-            sig_check()
+-            mpz_mul(PRE, PRE, AREAL[k])
+-            mpz_fdiv_q_2exp(PRE, PRE, wp)
+-        for k in range(cancellable_real, breal):
+-            sig_check()
+-            mpz_mul_2exp(PRE, PRE, wp)
+-            mpz_fdiv_q(PRE, PRE, BREAL[k])
+-        if have_complex:
+-            for k in range(cancellable_real):
+-                sig_check()
+-                mpz_mul(PIM, PIM, AREAL[k])
+-                mpz_fdiv_q(PIM, PIM, BREAL[k])
+-            for k in range(cancellable_real, areal):
+-                sig_check()
+-                mpz_mul(PIM, PIM, AREAL[k])
+-                mpz_fdiv_q_2exp(PIM, PIM, wp)
+-            for k in range(cancellable_real, breal):
+-                sig_check()
+-                mpz_mul_2exp(PIM, PIM, wp)
+-                mpz_fdiv_q(PIM, PIM, BREAL[k])
+-
+-        # Update product
+-        if have_complex:
+-            if have_complex_arg:
+-                # PRE = ((mul*(PRE*ZRE-PIM*ZIM))//div)>>wp
+-                # PIM = ((mul*(PIM*ZRE+PRE*ZIM))//div)>>wp
+-                mpz_mul(TRE, PRE, ZRE)
+-                mpz_submul(TRE, PIM, ZIM)
+-                mpz_mul(TRE, TRE, MUL)
+-
+-                mpz_mul(TIM, PIM, ZRE)
+-                mpz_addmul(TIM, PRE, ZIM)
+-                mpz_mul(TIM, TIM, MUL)
+-
+-                mpz_fdiv_q(PRE, TRE, DIV)
+-                mpz_fdiv_q_2exp(PRE, PRE, wp)
+-
+-                mpz_fdiv_q(PIM, TIM, DIV)
+-                mpz_fdiv_q_2exp(PIM, PIM, wp)
+-            else:
+-                mpz_mul(PRE, PRE, MUL)
+-                mpz_mul(PRE, PRE, ZRE)
+-                mpz_fdiv_q_2exp(PRE, PRE, wp)
+-                mpz_fdiv_q(PRE, PRE, DIV)
+-
+-                mpz_mul(PIM, PIM, MUL)
+-                mpz_mul(PIM, PIM, ZRE)
+-                mpz_fdiv_q_2exp(PIM, PIM, wp)
+-                mpz_fdiv_q(PIM, PIM, DIV)
+-
+-            for i in range(acomplex):
+-                sig_check()
+-                mpz_mul(TRE, PRE, ACRE[i])
+-                mpz_submul(TRE, PIM, ACIM[i])
+-                mpz_mul(TIM, PIM, ACRE[i])
+-                mpz_addmul(TIM, PRE, ACIM[i])
+-                mpz_fdiv_q_2exp(PRE, TRE, wp)
+-                mpz_fdiv_q_2exp(PIM, TIM, wp)
+-
+-            for i in range(bcomplex):
+-                sig_check()
+-                mpz_mul(URE, BCRE[i], BCRE[i])
+-                mpz_addmul(URE, BCIM[i], BCIM[i])
+-                mpz_mul(TRE, PRE, BCRE[i])
+-                mpz_addmul(TRE, PIM, BCIM[i])
+-                mpz_mul(TIM, PIM, BCRE[i])
+-                mpz_submul(TIM, PRE, BCIM[i])
+-                mpz_mul_2exp(PRE, TRE, wp)
+-                mpz_fdiv_q(PRE, PRE, URE)
+-                mpz_mul_2exp(PIM, TIM, wp)
+-                mpz_fdiv_q(PIM, PIM, URE)
+-        else:
+-            mpz_mul(PRE, PRE, MUL)
+-            mpz_mul(PRE, PRE, ZRE)
+-            mpz_fdiv_q_2exp(PRE, PRE, wp)
+-            mpz_fdiv_q(PRE, PRE, DIV)
+-
+-        # Add product to sum
+-        if have_complex:
+-            mpz_add(SRE, SRE, PRE)
+-            mpz_add(SIM, SIM, PIM)
+-            if mpz_cmpabs(PRE, HIGH) < 0 and mpz_cmpabs(PIM, HIGH) < 0:
+-                break
+-        else:
+-            mpz_add(SRE, SRE, PRE)
+-            if mpz_cmpabs(PRE, HIGH) < 0:
+-                break
+-
+-        if n > MAX:
+-            from mpmath.libmp import NoConvergence
+-            raise NoConvergence('Hypergeometric series converges too slowly. Try increasing maxterms.')
+-
+-        # +1 all parameters for next iteration
+-        for i in range(aint): mpz_add_ui(AINT[i], AINT[i], 1)
+-        for i in range(bint): mpz_add_ui(BINT[i], BINT[i], 1)
+-        for i in range(arat): mpz_add(AP[i], AP[i], AQ[i])
+-        for i in range(brat): mpz_add(BP[i], BP[i], BQ[i])
+-        for i in range(areal): mpz_add(AREAL[i], AREAL[i], one)
+-        for i in range(breal): mpz_add(BREAL[i], BREAL[i], one)
+-        for i in range(acomplex): mpz_add(ACRE[i], ACRE[i], one)
+-        for i in range(bcomplex): mpz_add(BCRE[i], BCRE[i], one)
+-
+-    # Done
+-    if have_complex:
+-        MPF_set_fixed(a, SRE, wp, prec, ROUND_N)
+-        MPF_set_fixed(b, SIM, wp, prec, ROUND_N)
+-        if mpz_sgn(SRE):
+-            if mpz_sgn(SIM):
+-                magn = max(mpz_get_si(a.exp) + <long>mpz_bitcount(a.man),
+-                           mpz_get_si(b.exp) + <long>mpz_bitcount(b.man))
+-            else:
+-                magn = mpz_get_si(a.exp) + <long>mpz_bitcount(a.man)
+-        elif mpz_sgn(SIM):
+-            magn = mpz_get_si(b.exp) + <long>mpz_bitcount(b.man)
+-        else:
+-            magn = -wp
+-    else:
+-        MPF_set_fixed(a, SRE, wp, prec, ROUND_N)
+-        if mpz_sgn(SRE):
+-            magn = mpz_get_si(a.exp) + <long>mpz_bitcount(a.man)
+-        else:
+-            magn = -wp
+-
+-    mpz_clear(one)
+-    mpz_clear(SRE)
+-    mpz_clear(SIM)
+-    mpz_clear(PRE)
+-    mpz_clear(PIM)
+-    mpz_clear(ZRE)
+-    mpz_clear(ZIM)
+-    mpz_clear(MUL)
+-    mpz_clear(DIV)
+-    mpz_clear(HIGH)
+-    mpz_clear(LOW)
+-    mpz_clear(TRE)
+-    mpz_clear(TIM)
+-    mpz_clear(URE)
+-    mpz_clear(UIM)
+-
+-    for i in range(aint): mpz_clear(AINT[i])
+-    for i in range(bint): mpz_clear(BINT[i])
+-    for i in range(arat):
+-        mpz_clear(AP[i])
+-        mpz_clear(AQ[i])
+-    for i in range(brat):
+-        mpz_clear(BP[i])
+-        mpz_clear(BQ[i])
+-    for i in range(areal): mpz_clear(AREAL[i])
+-    for i in range(breal): mpz_clear(BREAL[i])
+-    for i in range(acomplex):
+-        mpz_clear(ACRE[i])
+-        mpz_clear(ACIM[i])
+-    for i in range(bcomplex):
+-        mpz_clear(BCRE[i])
+-        mpz_clear(BCIM[i])
+-
+-    return have_complex, magn
+diff --git a/src/sage/libs/mpmath/ext_libmp.pyx b/src/sage/libs/mpmath/ext_libmp.pyx
+deleted file mode 100644
+index 487a12d45bc..00000000000
+--- a/src/sage/libs/mpmath/ext_libmp.pyx
++++ /dev/null
+@@ -1,230 +0,0 @@
+-"""
+-Faster versions of some key functions in mpmath.libmp
+-"""
+-from sage.libs.mpmath.ext_impl cimport *
+-from sage.libs.gmp.all cimport *
+-
+-# the next line is used by mpmath
+-from sage.libs.mpmath.ext_impl import exp_fixed, cos_sin_fixed, log_int_fixed
+-
+-# Note: not thread-safe
+-cdef MPF tmp1
+-cdef MPF tmp2
+-MPF_init(&tmp1)
+-MPF_init(&tmp2)
+-
+-
+-def mpf_add(tuple x, tuple y, int prec=0, str rnd='d'):
+-    cdef MPopts opts
+-    MPF_set_tuple(&tmp1, x)
+-    MPF_set_tuple(&tmp2, y)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    MPF_add(&tmp1, &tmp1, &tmp2, opts)
+-    return MPF_to_tuple(&tmp1)
+-
+-
+-def mpf_sub(tuple x, tuple y, int prec=0, str rnd='d'):
+-    cdef MPopts opts
+-    MPF_set_tuple(&tmp1, x)
+-    MPF_set_tuple(&tmp2, y)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    MPF_sub(&tmp1, &tmp1, &tmp2, opts)
+-    return MPF_to_tuple(&tmp1)
+-
+-
+-def mpf_mul(tuple x, tuple y, int prec=0, str rnd='d'):
+-    cdef MPopts opts
+-    MPF_set_tuple(&tmp1, x)
+-    MPF_set_tuple(&tmp2, y)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    MPF_mul(&tmp1, &tmp1, &tmp2, opts)
+-    return MPF_to_tuple(&tmp1)
+-
+-
+-def mpf_div(tuple x, tuple y, int prec, str rnd='d'):
+-    cdef MPopts opts
+-    MPF_set_tuple(&tmp1, x)
+-    MPF_set_tuple(&tmp2, y)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    MPF_div(&tmp1, &tmp1, &tmp2, opts)
+-    return MPF_to_tuple(&tmp1)
+-
+-
+-def mpf_sqrt(tuple x, int prec, str rnd='d'):
+-    """
+-    Compute sqrt(x) with mpf value tuples.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import mpf_sqrt, from_float, to_float
+-        sage: x = from_float(2)
+-        sage: y = mpf_sqrt(x, 53, 'n')
+-        sage: to_float(y)
+-        1.4142135623730951
+-    """
+-    if x[0]:
+-        import mpmath.libmp as libmp
+-        raise libmp.ComplexResult("square root of a negative number")
+-    cdef MPopts opts
+-    MPF_set_tuple(&tmp1, x)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    MPF_sqrt(&tmp1, &tmp1, opts)
+-    return MPF_to_tuple(&tmp1)
+-
+-
+-def mpf_log(tuple x, int prec, str rnd='d'):
+-    """
+-    Compute log(x) with mpf value tuples.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import mpf_log, from_float, to_float
+-        sage: x = from_float(2)
+-        sage: y = mpf_log(x, 53, 'n')
+-        sage: to_float(y)
+-        0.6931471805599453
+-    """
+-    if x[0]:
+-        import mpmath.libmp as libmp
+-        raise libmp.ComplexResult("logarithm of a negative number")
+-    cdef MPopts opts
+-    MPF_set_tuple(&tmp1, x)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    MPF_log(&tmp1, &tmp1, opts)
+-    return MPF_to_tuple(&tmp1)
+-
+-
+-def mpf_exp(tuple x, int prec, str rnd='d'):
+-    """
+-    Compute exp(x) with mpf value tuples.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import mpf_exp, from_float, to_float
+-        sage: x = from_float(2)
+-        sage: z = mpf_exp(x, 53, 'n')
+-        sage: to_float(z)
+-        7.38905609893065
+-    """
+-    cdef MPopts opts
+-    MPF_set_tuple(&tmp1, x)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    MPF_exp(&tmp1, &tmp1, opts)
+-    return MPF_to_tuple(&tmp1)
+-
+-
+-def mpf_cos(tuple x, int prec, str rnd='d'):
+-    """
+-    Compute cos(x) with mpf value tuples.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import mpf_cos, from_float, to_float
+-        sage: x = from_float(1)
+-        sage: y = mpf_cos(x, 53, 'n')
+-        sage: to_float(y)
+-        0.5403023058681398
+-    """
+-    cdef MPopts opts
+-    MPF_set_tuple(&tmp1, x)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    MPF_cos(&tmp1, &tmp1, opts)
+-    return MPF_to_tuple(&tmp1)
+-
+-
+-def mpf_sin(tuple x, int prec, str rnd='d'):
+-    """
+-    Compute sin(x) with mpf value tuples.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import mpf_sin, from_float, to_float
+-        sage: x = from_float(1)
+-        sage: y = mpf_sin(x, 53, 'n')
+-        sage: to_float(y)
+-        0.8414709848078965
+-    """
+-    cdef MPopts opts
+-    MPF_set_tuple(&tmp1, x)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    MPF_sin(&tmp1, &tmp1, opts)
+-    return MPF_to_tuple(&tmp1)
+-
+-
+-def mpc_sqrt(tuple z, int prec, str rnd='d'):
+-    """
+-    Compute sqrt(z) with mpc value tuples.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import mpc_sqrt, from_float, to_float
+-        sage: z = from_float(-2), from_float(0)
+-        sage: re, im = mpc_sqrt(z, 53, 'n')
+-        sage: to_float(re), to_float(im)
+-        (0.0, 1.4142135623730951)
+-    """
+-    cdef tuple a, b
+-    cdef MPopts opts
+-    a, b = z
+-    MPF_set_tuple(&tmp1, a)
+-    MPF_set_tuple(&tmp2, b)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    MPF_complex_sqrt(&tmp1, &tmp2, &tmp1, &tmp2, opts)
+-    return MPF_to_tuple(&tmp1), MPF_to_tuple(&tmp2)
+-
+-
+-def mpc_exp(tuple z, int prec, str rnd='d'):
+-    """
+-    Compute exp(z) with mpc value tuples.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import mpc_exp, from_float, to_float
+-        sage: z = from_float(0), from_float(1)
+-        sage: re, im = mpc_exp(z, 53, 'n')
+-        sage: to_float(re), to_float(im)
+-        (0.5403023058681398, 0.8414709848078965)
+-    """
+-    cdef tuple a, b
+-    cdef MPopts opts
+-    a, b = z
+-    MPF_set_tuple(&tmp1, a)
+-    MPF_set_tuple(&tmp2, b)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    MPF_complex_exp(&tmp1, &tmp2, &tmp1, &tmp2, opts)
+-    return MPF_to_tuple(&tmp1), MPF_to_tuple(&tmp2)
+-
+-
+-def mpf_pow(tuple x, tuple y, int prec, str rnd='d'):
+-    """
+-    Compute x ^ y with mpf value tuples.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import mpf_pow, from_float, to_float
+-        sage: x = from_float(2)
+-        sage: y = from_float(3)
+-        sage: z = mpf_pow(x, y, 53, 'n')
+-        sage: to_float(z)
+-        8.0
+-    """
+-    cdef MPopts opts
+-    MPF_set_tuple(&tmp1, x)
+-    MPF_set_tuple(&tmp2, y)
+-    opts.rounding = rndmode_from_python(rnd)
+-    opts.prec = prec
+-    if MPF_pow(&tmp1, &tmp1, &tmp2, opts):
+-        import mpmath.libmp as libmp
+-        raise libmp.ComplexResult("negative number raised to a fractional power")
+-    return MPF_to_tuple(&tmp1)
+diff --git a/src/sage/libs/mpmath/ext_main.pxd b/src/sage/libs/mpmath/ext_main.pxd
+deleted file mode 100644
+index 8a3bf740b0e..00000000000
+--- a/src/sage/libs/mpmath/ext_main.pxd
++++ /dev/null
+@@ -1 +0,0 @@
+-from sage.libs.mpmath.ext_impl cimport *
+diff --git a/src/sage/libs/mpmath/ext_main.pyx b/src/sage/libs/mpmath/ext_main.pyx
+deleted file mode 100644
+index f8c4420f2f4..00000000000
+--- a/src/sage/libs/mpmath/ext_main.pyx
++++ /dev/null
+@@ -1,2638 +0,0 @@
+-"""
+-mpmath floating-point numbers
+-
+-Implements mpf and mpc types, with binary operations and support
+-for interaction with other types. Also implements the main
+-context class, and related utilities.
+-"""
+-
+-#*****************************************************************************
+-# This program is free software: you can redistribute it and/or modify
+-# it under the terms of the GNU General Public License as published by
+-# the Free Software Foundation, either version 2 of the License, or
+-# (at your option) any later version.
+-#                  http://www.gnu.org/licenses/
+-#*****************************************************************************
+-
+-from cpython.long cimport *
+-from cpython.float cimport *
+-from cpython.complex cimport *
+-from cpython.number cimport *
+-
+-from cysignals.signals cimport sig_check
+-
+-from sage.ext.stdsage cimport PY_NEW
+-
+-from sage.libs.gmp.all cimport *
+-from sage.rings.integer cimport Integer
+-
+-DEF ROUND_N = 0
+-DEF ROUND_F = 1
+-DEF ROUND_C = 2
+-DEF ROUND_D = 3
+-DEF ROUND_U = 4
+-DEF S_NORMAL = 0
+-DEF S_ZERO = 1
+-DEF S_NZERO = 2
+-DEF S_INF = 3
+-DEF S_NINF = 4
+-DEF S_NAN = 5
+-
+-from sage.libs.mpmath.ext_impl cimport *
+-
+-import mpmath.rational as rationallib
+-import mpmath.libmp as libmp
+-import mpmath.function_docs as function_docs
+-from mpmath.libmp import to_str
+-from mpmath.libmp import repr_dps, prec_to_dps, dps_to_prec
+-
+-DEF OP_ADD = 0
+-DEF OP_SUB = 1
+-DEF OP_MUL = 2
+-DEF OP_DIV = 3
+-DEF OP_POW = 4
+-DEF OP_MOD = 5
+-DEF OP_RICHCMP = 6
+-DEF OP_EQ = (OP_RICHCMP + 2)
+-DEF OP_NE = (OP_RICHCMP + 3)
+-DEF OP_LT = (OP_RICHCMP + 0)
+-DEF OP_GT = (OP_RICHCMP + 4)
+-DEF OP_LE = (OP_RICHCMP + 1)
+-DEF OP_GE = (OP_RICHCMP + 5)
+-
+-cdef MPopts opts_exact
+-cdef MPopts opts_double_precision
+-cdef MPopts opts_mini_prec
+-
+-opts_exact.prec = 0
+-opts_exact.rounding = ROUND_N
+-opts_double_precision.prec = 53
+-opts_double_precision.rounding = ROUND_N
+-opts_mini_prec.prec = 5
+-opts_mini_prec.rounding = ROUND_D
+-
+-cdef MPF MPF_C_0
+-cdef MPF MPF_C_1
+-cdef MPF MPF_C_2
+-
+-MPF_init(&MPF_C_0)
+-MPF_set_zero(&MPF_C_0)
+-MPF_init(&MPF_C_1)
+-MPF_set_si(&MPF_C_1, 1)
+-MPF_init(&MPF_C_2)
+-MPF_set_si(&MPF_C_2, 2)
+-
+-# Temporaries used for operands in binary operations
+-cdef mpz_t tmp_mpz
+-mpz_init(tmp_mpz)
+-
+-cdef MPF tmp1
+-cdef MPF tmp2
+-cdef MPF tmp_opx_re
+-cdef MPF tmp_opx_im
+-cdef MPF tmp_opy_re
+-cdef MPF tmp_opy_im
+-
+-MPF_init(&tmp1)
+-MPF_init(&tmp2)
+-MPF_init(&tmp_opx_re)
+-MPF_init(&tmp_opx_im)
+-MPF_init(&tmp_opy_re)
+-MPF_init(&tmp_opy_im)
+-
+-cdef class Context
+-cdef class mpnumber
+-cdef class mpf_base
+-cdef class mpf
+-cdef class mpc
+-cdef class constant
+-cdef class wrapped_libmp_function
+-cdef class wrapped_specfun
+-
+-cdef __isint(MPF *v):
+-    return v.special == S_ZERO or (v.special == S_NORMAL and mpz_sgn(v.exp) >= 0)
+-
+-cdef int MPF_set_any(MPF *re, MPF *im, x, MPopts opts, bint str_tuple_ok) except -1:
+-    """
+-    Set re + im*i = x, where x is any Python number.
+-
+-    Returns 0 if unable to coerce x; 1 if x is real and re was set;
+-    2 if x is complex and both re and im were set.
+-
+-    If str_tuple_ok=True, strings and tuples are accepted and converted
+-    (useful for parsing arguments, but not for arithmetic operands).
+-    """
+-    if isinstance(x, mpf):
+-        MPF_set(re, &(<mpf>x).value)
+-        return 1
+-    if isinstance(x, mpc):
+-        MPF_set(re, &(<mpc>x).re)
+-        MPF_set(im, &(<mpc>x).im)
+-        return 2
+-    if isinstance(x, (int, Integer)):
+-        MPF_set_int(re, x)
+-        return 1
+-    if isinstance(x, float):
+-        MPF_set_double(re, x)
+-        return 1
+-    if isinstance(x, complex):
+-        MPF_set_double(re, x.real)
+-        MPF_set_double(im, x.imag)
+-        return 2
+-    if isinstance(x, constant):
+-        MPF_set_tuple(re, x.func(opts.prec, rndmode_to_python(opts.rounding)))
+-        return 1
+-    if hasattr(x, "_mpf_"):
+-        MPF_set_tuple(re, x._mpf_)
+-        return 1
+-    if hasattr(x, "_mpc_"):
+-        r, i = x._mpc_
+-        MPF_set_tuple(re, r)
+-        MPF_set_tuple(im, i)
+-        return 2
+-    if hasattr(x, "_mpmath_"):
+-        return MPF_set_any(re, im, x._mpmath_(opts.prec,
+-            rndmode_to_python(opts.rounding)), opts, False)
+-    if isinstance(x, rationallib.mpq):
+-        p, q = x._mpq_
+-        MPF_set_int(re, p)
+-        MPF_set_int(im, q)
+-        MPF_div(re, re, im, opts)
+-        #MPF_set_tuple(re, libmp.from_rational(p, q, opts.prec,
+-        #    rndmode_to_python(opts.rounding)))
+-        return 1
+-    if hasattr(x, '_mpi_'):
+-        a, b = x._mpi_
+-        if a == b:
+-            MPF_set_tuple(re, a)
+-            return 1
+-        raise ValueError("can only create mpf from zero-width interval")
+-    if str_tuple_ok:
+-        if isinstance(x, tuple):
+-            if len(x) == 2:
+-                MPF_set_man_exp(re, x[0], x[1])
+-                return 1
+-            elif len(x) == 4:
+-                MPF_set_tuple(re, x)
+-                return 1
+-        if isinstance(x, str):
+-            try:
+-                st = libmp.from_str(x, opts.prec,
+-                    rndmode_to_python(opts.rounding))
+-            except ValueError:
+-                return 0
+-            MPF_set_tuple(re, st)
+-            return 1
+-    return 0
+-
+-cdef binop(int op, x, y, MPopts opts):
+-    cdef int typx
+-    cdef int typy
+-    cdef MPF xre, xim, yre, yim
+-    cdef mpf rr
+-    cdef mpc rc
+-    cdef MPopts altopts
+-
+-    if isinstance(x, mpf):
+-        xre = (<mpf>x).value
+-        typx = 1
+-    elif isinstance(x, mpc):
+-        xre = (<mpc>x).re
+-        xim = (<mpc>x).im
+-        typx = 2
+-    else:
+-        typx = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, opts, False)
+-        if typx == 0:
+-            return NotImplemented
+-        xre = tmp_opx_re
+-        xim = tmp_opx_im
+-
+-    if isinstance(y, mpf):
+-        yre = (<mpf>y).value
+-        typy = 1
+-    elif isinstance(y, mpc):
+-        yre = (<mpc>y).re
+-        yim = (<mpc>y).im
+-        typy = 2
+-    else:
+-        typy = MPF_set_any(&tmp_opy_re, &tmp_opy_im, y, opts, False)
+-        if typy == 0:
+-            return NotImplemented
+-        yre = tmp_opy_re
+-        yim = tmp_opy_im
+-
+-    if op == OP_ADD:
+-        if typx == 1 and typy == 1:
+-            # Real result
+-            rr = mpf.__new__(mpf)
+-            MPF_add(&rr.value, &xre, &yre, opts)
+-            return rr
+-        else:
+-            # Complex result
+-            rc = mpc.__new__(mpc)
+-            MPF_add(&rc.re, &xre, &yre, opts)
+-            if typx == 1:
+-                MPF_set(&rc.im, &yim)
+-                #MPF_normalize(&rc.im, opts)
+-            elif typy == 1:
+-                MPF_set(&rc.im, &xim)
+-                #MPF_normalize(&rc.im, opts)
+-            else:
+-                MPF_add(&rc.im, &xim, &yim, opts)
+-            return rc
+-
+-    elif op == OP_SUB:
+-        if typx == 1 and typy == 1:
+-            # Real result
+-            rr = mpf.__new__(mpf)
+-            MPF_sub(&rr.value, &xre, &yre, opts)
+-            return rr
+-        else:
+-            # Complex result
+-            rc = mpc.__new__(mpc)
+-            MPF_sub(&rc.re, &xre, &yre, opts)
+-            if typx == 1:
+-                MPF_neg(&rc.im, &yim)
+-                MPF_normalize(&rc.im, opts)
+-            elif typy == 1:
+-                MPF_set(&rc.im, &xim)
+-                MPF_normalize(&rc.im, opts)
+-            else:
+-                MPF_sub(&rc.im, &xim, &yim, opts)
+-            return rc
+-
+-    elif op == OP_MUL:
+-        if typx == 1 and typy == 1:
+-            # Real result
+-            rr = mpf.__new__(mpf)
+-            MPF_mul(&rr.value, &xre, &yre, opts)
+-            return rr
+-        else:
+-            # Complex result
+-            rc = mpc.__new__(mpc)
+-            if typx == 1:
+-                MPF_mul(&rc.re, &yre, &xre, opts)
+-                MPF_mul(&rc.im, &yim, &xre, opts)
+-            elif typy == 1:
+-                MPF_mul(&rc.re, &xre, &yre, opts)
+-                MPF_mul(&rc.im, &xim, &yre, opts)
+-            else:
+-                # a*c - b*d
+-                MPF_mul(&rc.re, &xre,   &yre,  opts_exact)
+-                MPF_mul(&tmp1,  &xim,   &yim,  opts_exact)
+-                MPF_sub(&rc.re, &rc.re, &tmp1, opts)
+-                # a*d + b*c
+-                MPF_mul(&rc.im, &xre,   &yim,  opts_exact)
+-                MPF_mul(&tmp1,  &xim,   &yre,  opts_exact)
+-                MPF_add(&rc.im, &rc.im, &tmp1, opts)
+-            return rc
+-
+-    elif op == OP_DIV:
+-        if typx == 1 and typy == 1:
+-            # Real result
+-            rr = mpf.__new__(mpf)
+-            MPF_div(&rr.value, &xre, &yre, opts)
+-            return rr
+-        else:
+-            rc = mpc.__new__(mpc)
+-            if typy == 1:
+-                MPF_div(&rc.re, &xre, &yre, opts)
+-                MPF_div(&rc.im, &xim, &yre, opts)
+-            else:
+-                if typx == 1:
+-                    xim = MPF_C_0
+-                altopts = opts
+-                altopts.prec += 10
+-                # m = c*c + d*d
+-                MPF_mul(&tmp1, &yre,  &yre, opts_exact)
+-                MPF_mul(&tmp2, &yim,  &yim, opts_exact)
+-                MPF_add(&tmp1, &tmp1, &tmp2, altopts)
+-                # (a*c+b*d)/m
+-                MPF_mul(&rc.re, &xre,   &yre, opts_exact)
+-                MPF_mul(&tmp2,  &xim,   &yim, opts_exact)
+-                MPF_add(&rc.re, &rc.re, &tmp2, altopts)
+-                MPF_div(&rc.re, &rc.re, &tmp1, opts)
+-                # (b*c-a*d)/m
+-                MPF_mul(&rc.im, &xim,   &yre, opts_exact)
+-                MPF_mul(&tmp2,  &xre,   &yim, opts_exact)
+-                MPF_sub(&rc.im, &rc.im, &tmp2, altopts)
+-                MPF_div(&rc.im, &rc.im, &tmp1, opts)
+-            return rc
+-
+-    elif op == OP_POW:
+-        if typx == 1 and typy == 1:
+-            rr = mpf.__new__(mpf)
+-            if not MPF_pow(&rr.value, &xre, &yre, opts):
+-                return rr
+-        if typx == 1: xim = MPF_C_0
+-        if typy == 1: yim = MPF_C_0
+-        rc = mpc.__new__(mpc)
+-        MPF_complex_pow(&rc.re, &rc.im, &xre, &xim, &yre, &yim, opts)
+-        return rc
+-
+-    elif op == OP_MOD:
+-        if typx != 1 or typx != 1:
+-            raise TypeError("mod for complex numbers")
+-        xret = MPF_to_tuple(&xre)
+-        yret = MPF_to_tuple(&yre)
+-        v = libmp.mpf_mod(xret, yret, opts.prec, rndmode_to_python(opts.rounding))
+-        rr = mpf.__new__(mpf)
+-        MPF_set_tuple(&rr.value, v)
+-        return rr
+-
+-    elif op == OP_EQ:
+-        if typx == 1 and typy == 1:
+-            return MPF_eq(&xre, &yre)
+-        if typx == 1:
+-            return MPF_eq(&xre, &yre) and MPF_eq(&yim, &MPF_C_0)
+-        if typy == 1:
+-            return MPF_eq(&xre, &yre) and MPF_eq(&xim, &MPF_C_0)
+-        return MPF_eq(&xre, &yre) and MPF_eq(&xim, &yim)
+-
+-    elif op == OP_NE:
+-        if typx == 1 and typy == 1:
+-            return MPF_ne(&xre, &yre)
+-        if typx == 1:
+-            return MPF_ne(&xre, &yre) or MPF_ne(&yim, &MPF_C_0)
+-        if typy == 1:
+-            return MPF_ne(&xre, &yre) or MPF_ne(&xim, &MPF_C_0)
+-        return MPF_ne(&xre, &yre) or MPF_ne(&xim, &yim)
+-
+-    elif op == OP_LT:
+-        if typx != 1 or typy != 1:
+-            raise ValueError("cannot compare complex numbers")
+-        return MPF_lt(&xre, &yre)
+-
+-    elif op == OP_GT:
+-        if typx != 1 or typy != 1:
+-            raise ValueError("cannot compare complex numbers")
+-        return MPF_gt(&xre, &yre)
+-
+-    elif op == OP_LE:
+-        if typx != 1 or typy != 1:
+-            raise ValueError("cannot compare complex numbers")
+-        return MPF_le(&xre, &yre)
+-
+-    elif op == OP_GE:
+-        if typx != 1 or typy != 1:
+-            raise ValueError("cannot compare complex numbers")
+-        return MPF_ge(&xre, &yre)
+-
+-    return NotImplemented
+-
+-
+-cdef MPopts global_opts
+-
+-global_context = None
+-
+-cdef class Context:
+-    cdef public mpf, mpc, constant  # , def_mp_function
+-    cdef public trap_complex
+-    cdef public pretty
+-
+-    def __cinit__(ctx):
+-        """
+-        At present, only a single global context should exist::
+-
+-            sage: from mpmath import mp
+-            sage: type(mp)
+-            <class 'mpmath.ctx_mp.MPContext'>
+-        """
+-        global global_opts, global_context
+-        global_opts = opts_double_precision
+-        global_context = ctx
+-        ctx.mpf = mpf
+-        ctx.mpc = mpc
+-        ctx.constant = constant
+-        #ctx.def_mp_function = def_mp_function
+-        ctx._mpq = rationallib.mpq
+-
+-    def default(ctx):
+-        """
+-        Set defaults.
+-
+-        TESTS::
+-
+-            sage: import mpmath
+-            sage: mpmath.mp.prec = 100
+-            sage: mpmath.mp.default()
+-            sage: mpmath.mp.prec
+-            53
+-        """
+-        global global_opts
+-        global_opts = opts_double_precision
+-        ctx.trap_complex = False
+-        ctx.pretty = False
+-
+-    def _get_prec(ctx):
+-        """
+-        Controls the working precision in bits::
+-
+-            sage: from mpmath import mp
+-            sage: mp.prec = 100
+-            sage: mp.prec
+-            100
+-            sage: mp.dps
+-            29
+-            sage: mp.prec = 53
+-        """
+-        return global_opts.prec
+-
+-    def _set_prec(ctx, prec):
+-        """
+-        Controls the working precision in bits::
+-
+-            sage: from mpmath import mp
+-            sage: mp.prec = 100
+-            sage: mp.prec
+-            100
+-            sage: mp.dps
+-            29
+-            sage: mp.prec = 53
+-        """
+-        global_opts.prec = prec
+-
+-    def _set_dps(ctx, n):
+-        """
+-        Controls the working precision in decimal digits::
+-
+-            sage: from mpmath import mp
+-            sage: mp.dps = 100
+-            sage: mp.prec
+-            336
+-            sage: mp.dps
+-            100
+-            sage: mp.prec = 53
+-        """
+-        global_opts.prec = dps_to_prec(int(n))
+-
+-    def _get_dps(ctx):
+-        """
+-        Controls the working precision in decimal digits::
+-
+-            sage: from mpmath import mp
+-            sage: mp.dps = 100
+-            sage: mp.prec
+-            336
+-            sage: mp.dps
+-            100
+-            sage: mp.prec = 53
+-        """
+-        return prec_to_dps(global_opts.prec)
+-
+-    dps = property(_get_dps, _set_dps, doc=_get_dps.__doc__)
+-    prec = property(_get_prec, _set_prec, doc=_get_dps.__doc__)
+-    _dps = property(_get_dps, _set_dps, doc=_get_dps.__doc__)
+-    _prec = property(_get_prec, _set_prec, doc=_get_dps.__doc__)
+-
+-    def _get_prec_rounding(ctx):
+-        """
+-        Return the precision and rounding mode::
+-
+-            sage: from mpmath import mp
+-            sage: mp._get_prec_rounding()
+-            (53, 'n')
+-        """
+-        return global_opts.prec, rndmode_to_python(global_opts.rounding)
+-
+-    _prec_rounding = property(_get_prec_rounding)
+-
+-    cpdef mpf make_mpf(ctx, tuple v):
+-        """
+-        Create an mpf from tuple data::
+-
+-            sage: import mpmath
+-            sage: float(mpmath.mp.make_mpf((0,1,-1,1)))
+-            0.5
+-        """
+-        cdef mpf x
+-        x = mpf.__new__(mpf)
+-        MPF_set_tuple(&x.value, v)
+-        return x
+-
+-    cpdef mpc make_mpc(ctx, tuple v):
+-        """
+-        Create an mpc from tuple data::
+-
+-            sage: import mpmath
+-            sage: complex(mpmath.mp.make_mpc(((0,1,-1,1), (1,1,-2,1))))
+-            (0.5-0.25j)
+-        """
+-        cdef mpc x
+-        x = mpc.__new__(mpc)
+-        MPF_set_tuple(&x.re, v[0])
+-        MPF_set_tuple(&x.im, v[1])
+-        return x
+-
+-    def convert(ctx, x, strings=True):
+-        """
+-        Convert *x* to an ``mpf``, ``mpc`` or ``mpi``. If *x* is of type ``mpf``,
+-        ``mpc``, ``int``, ``float``, ``complex``, the conversion
+-        will be performed losslessly.
+-
+-        If *x* is a string, the result will be rounded to the present
+-        working precision. Strings representing fractions or complex
+-        numbers are permitted.
+-
+-        TESTS::
+-
+-            sage: from mpmath import mp, convert
+-            sage: mp.dps = 15; mp.pretty = False
+-            sage: convert(3.5)
+-            mpf('3.5')
+-            sage: convert('2.1')
+-            mpf('2.1000000000000001')
+-            sage: convert('3/4')
+-            mpf('0.75')
+-            sage: convert('2+3j')
+-            mpc(real='2.0', imag='3.0')
+-        """
+-        cdef mpf rr
+-        cdef mpc rc
+-        if isinstance(x, mpnumber):
+-            return x
+-        typx = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, global_opts, strings)
+-        if typx == 1:
+-            rr = mpf.__new__(mpf)
+-            MPF_set(&rr.value, &tmp_opx_re)
+-            return rr
+-        if typx == 2:
+-            rc = mpc.__new__(mpc)
+-            MPF_set(&rc.re, &tmp_opx_re)
+-            MPF_set(&rc.im, &tmp_opx_im)
+-            return rc
+-        return ctx._convert_fallback(x, strings)
+-
+-    def isnan(ctx, x):
+-        """
+-        For an ``mpf`` *x*, determines whether *x* is not-a-number (nan).
+-
+-        TESTS::
+-
+-            sage: from mpmath import isnan, nan
+-            sage: isnan(nan), isnan(3)
+-            (True, False)
+-        """
+-        cdef int s, t, typ
+-        if isinstance(x, mpf):
+-            return (<mpf>x).value.special == S_NAN
+-        if isinstance(x, mpc):
+-            s = (<mpc>x).re.special
+-            t = (<mpc>x).im.special
+-            return s == S_NAN or t == S_NAN
+-        if isinstance(x, (int, Integer, rationallib.mpq)):
+-            return False
+-        typ = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, global_opts, 0)
+-        if typ == 1:
+-            s = tmp_opx_re.special
+-            return s == S_NAN
+-        if typ == 2:
+-            s = tmp_opx_re.special
+-            t = tmp_opx_im.special
+-            return s == S_NAN or t == S_NAN
+-        raise TypeError("isnan() needs a number as input")
+-
+-    def isinf(ctx, x):
+-        """
+-        Return *True* if the absolute value of *x* is infinite;
+-        otherwise return *False*.
+-
+-        TESTS::
+-
+-            sage: from mpmath import isinf, inf, mpc
+-            sage: isinf(inf)
+-            True
+-            sage: isinf(-inf)
+-            True
+-            sage: isinf(3)
+-            False
+-            sage: isinf(3+4j)
+-            False
+-            sage: isinf(mpc(3,inf))
+-            True
+-            sage: isinf(mpc(inf,3))
+-            True
+-        """
+-        cdef int s, t, typ
+-        if isinstance(x, mpf):
+-            s = (<mpf>x).value.special
+-            return s == S_INF or s == S_NINF
+-        if isinstance(x, mpc):
+-            s = (<mpc>x).re.special
+-            t = (<mpc>x).im.special
+-            return s == S_INF or s == S_NINF or t == S_INF or t == S_NINF
+-        if isinstance(x, (int, Integer, rationallib.mpq)):
+-            return False
+-        typ = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, global_opts, 0)
+-        if typ == 1:
+-            s = tmp_opx_re.special
+-            return s == S_INF or s == S_NINF
+-        if typ == 2:
+-            s = tmp_opx_re.special
+-            t = tmp_opx_im.special
+-            return s == S_INF or s == S_NINF or t == S_INF or t == S_NINF
+-        raise TypeError("isinf() needs a number as input")
+-
+-    def isnormal(ctx, x):
+-        """
+-        Determine whether *x* is "normal" in the sense of floating-point
+-        representation; that is, return *False* if *x* is zero, an
+-        infinity or NaN; otherwise return *True*. By extension, a
+-        complex number *x* is considered "normal" if its magnitude is
+-        normal.
+-
+-        TESTS::
+-
+-            sage: from mpmath import isnormal, inf, nan, mpc
+-            sage: isnormal(3)
+-            True
+-            sage: isnormal(0)
+-            False
+-            sage: isnormal(inf); isnormal(-inf); isnormal(nan)
+-            False
+-            False
+-            False
+-            sage: isnormal(0+0j)
+-            False
+-            sage: isnormal(0+3j)
+-            True
+-            sage: isnormal(mpc(2,nan))
+-            False
+-        """
+-        # TODO: optimize this
+-        if hasattr(x, "_mpf_"):
+-            return bool(x._mpf_[1])
+-        if hasattr(x, "_mpc_"):
+-            re, im = x._mpc_
+-            re_normal = bool(re[1])
+-            im_normal = bool(im[1])
+-            if re == libmp.fzero: return im_normal
+-            if im == libmp.fzero: return re_normal
+-            return re_normal and im_normal
+-        if isinstance(x, (int, Integer, rationallib.mpq)):
+-            return bool(x)
+-        x = ctx.convert(x)
+-        if hasattr(x, '_mpf_') or hasattr(x, '_mpc_'):
+-            return ctx.isnormal(x)
+-        raise TypeError("isnormal() needs a number as input")
+-
+-    def isint(ctx, x, gaussian=False):
+-        """
+-        Return *True* if *x* is integer-valued; otherwise return
+-        *False*.
+-
+-        TESTS::
+-
+-            sage: from mpmath import isint, mpf, inf
+-            sage: isint(3)
+-            True
+-            sage: isint(mpf(3))
+-            True
+-            sage: isint(3.2)
+-            False
+-            sage: isint(inf)
+-            False
+-
+-        Optionally, Gaussian integers can be checked for::
+-
+-            sage: isint(3+0j)
+-            True
+-            sage: isint(3+2j)
+-            False
+-            sage: isint(3+2j, gaussian=True)
+-            True
+-        """
+-        cdef MPF v
+-        cdef MPF w
+-        cdef int typ
+-        if isinstance(x, (int, Integer)):
+-            return True
+-        if isinstance(x, mpf):
+-            v = (<mpf>x).value
+-            return __isint(&v)
+-        if isinstance(x, mpc):
+-            v = (<mpc>x).re
+-            w = (<mpc>x).im
+-            if gaussian:
+-                return __isint(&v) and __isint(&w)
+-            return (w.special == S_ZERO) and __isint(&v)
+-        if isinstance(x, rationallib.mpq):
+-            p, q = x._mpq_
+-            return not (p % q)
+-        typ = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, global_opts, 0)
+-        if typ == 1:
+-            return __isint(&tmp_opx_re)
+-        if typ == 2:
+-            v = tmp_opx_re
+-            w = tmp_opx_im
+-            if gaussian:
+-                return __isint(&v) and __isint(&w)
+-            return (w.special == S_ZERO) and __isint(&v)
+-        raise TypeError("isint() needs a number as input")
+-
+-    def fsum(ctx, terms, bint absolute=False, bint squared=False):
+-        """
+-        Calculate a sum containing a finite number of terms (for infinite
+-        series, see :func:`nsum`). The terms will be converted to
+-        mpmath numbers. For len(terms) > 2, this function is generally
+-        faster and produces more accurate results than the builtin
+-        Python function :func:`sum`.
+-
+-        With ``squared=True`` each term is squared, and with ``absolute=True``
+-        the absolute value of each term is used.
+-
+-        TESTS::
+-
+-            sage: from mpmath import mp, fsum
+-            sage: mp.dps = 15; mp.pretty = False
+-            sage: fsum([1, 2, 0.5, 7])
+-            mpf('10.5')
+-
+-        Check that the regression from `mpmath/issues/723 <https://github.com/mpmath/mpmath/issues/723>`__
+-        has been fixed::
+-
+-            sage: from mpmath import *
+-            sage: mp.dps=16
+-            sage: zeta(-0.01 + 1000j)
+-            mpc(real='-8.9714595...', imag='8.7321793...')
+-        """
+-        cdef MPF sre, sim, tre, tim, tmp
+-        cdef mpf rr
+-        cdef mpc rc
+-        cdef MPopts workopts
+-        cdef int styp, ttyp
+-        workopts = global_opts
+-        workopts.prec = workopts.prec * 2 + 50
+-        workopts.rounding = ROUND_D
+-        unknown = global_context.zero
+-        try:
+-            sig_check()
+-            MPF_init(&sre)
+-            MPF_init(&sim)
+-            MPF_init(&tre)
+-            MPF_init(&tim)
+-            MPF_init(&tmp)
+-            styp = 1
+-            for term in terms:
+-                ttyp = MPF_set_any(&tre, &tim, term, workopts, 0)
+-                if ttyp == 0:
+-                    if absolute: term = ctx.absmax(term)
+-                    if squared: term = term**2
+-                    unknown += term
+-                    continue
+-                if absolute:
+-                    if squared:
+-                        if ttyp == 1:
+-                            MPF_mul(&tre, &tre, &tre, opts_exact)
+-                            MPF_add(&sre, &sre, &tre, workopts)
+-                        elif ttyp == 2:
+-                            # |(a+bi)^2| = a^2+b^2
+-                            MPF_mul(&tre, &tre, &tre, opts_exact)
+-                            MPF_add(&sre, &sre, &tre, workopts)
+-                            MPF_mul(&tim, &tim, &tim, opts_exact)
+-                            MPF_add(&sre, &sre, &tim, workopts)
+-                    else:
+-                        if ttyp == 1:
+-                            MPF_abs(&tre, &tre)
+-                            MPF_add(&sre, &sre, &tre, workopts)
+-                        elif ttyp == 2:
+-                            # |a+bi| = sqrt(a^2+b^2)
+-                            MPF_mul(&tre, &tre, &tre, opts_exact)
+-                            MPF_mul(&tim, &tim, &tim, opts_exact)
+-                            MPF_add(&tre, &tre, &tim, workopts)
+-                            MPF_sqrt(&tre, &tre, workopts)
+-                            MPF_add(&sre, &sre, &tre, workopts)
+-                elif squared:
+-                    if ttyp == 1:
+-                        MPF_mul(&tre, &tre, &tre, opts_exact)
+-                        MPF_add(&sre, &sre, &tre, workopts)
+-                    elif ttyp == 2:
+-                        # (a+bi)^2 = a^2-b^2 + 2i*ab
+-                        MPF_mul(&tmp, &tre, &tim, opts_exact)
+-                        MPF_mul(&tmp, &tmp, &MPF_C_2, opts_exact)
+-                        MPF_add(&sim, &sim, &tmp, workopts)
+-                        MPF_mul(&tre, &tre, &tre, opts_exact)
+-                        MPF_add(&sre, &sre, &tre, workopts)
+-                        MPF_mul(&tim, &tim, &tim, opts_exact)
+-                        MPF_sub(&sre, &sre, &tim, workopts)
+-                        styp = 2
+-                else:
+-                    if ttyp == 1:
+-                        MPF_add(&sre, &sre, &tre, workopts)
+-                    elif ttyp == 2:
+-                        MPF_add(&sre, &sre, &tre, workopts)
+-                        MPF_add(&sim, &sim, &tim, workopts)
+-                        styp = 2
+-            MPF_clear(&tre)
+-            MPF_clear(&tim)
+-            if styp == 1:
+-                rr = mpf.__new__(mpf)
+-                MPF_set(&rr.value, &sre)
+-                MPF_clear(&sre)
+-                MPF_clear(&sim)
+-                MPF_normalize(&rr.value, global_opts)
+-                if unknown is not global_context.zero:
+-                    return ctx._stupid_add(rr, unknown)
+-                return rr
+-            elif styp == 2:
+-                rc = mpc.__new__(mpc)
+-                MPF_set(&rc.re, &sre)
+-                MPF_set(&rc.im, &sim)
+-                MPF_clear(&sre)
+-                MPF_clear(&sim)
+-                MPF_normalize(&rc.re, global_opts)
+-                MPF_normalize(&rc.im, global_opts)
+-                if unknown is not global_context.zero:
+-                    return ctx._stupid_add(rc, unknown)
+-                return rc
+-            else:
+-                MPF_clear(&sre)
+-                MPF_clear(&sim)
+-                return +unknown
+-        except KeyboardInterrupt:
+-            raise KeyboardInterrupt('Ctrl-C pressed while running fsum')
+-
+-    def fdot(ctx, A, B=None, bint conjugate=False):
+-        r"""
+-        Compute the dot product of the iterables `A` and `B`.
+-
+-        .. MATH::
+-
+-            \sum_{k=0} A_k B_k.
+-
+-        Alternatively, :func:`fdot` accepts a single iterable of pairs.
+-        In other words, ``fdot(A,B)`` and ``fdot(zip(A,B))`` are equivalent.
+-
+-        The elements are automatically converted to mpmath numbers.
+-
+-        TESTS::
+-
+-            sage: from mpmath import mp, fdot
+-            sage: mp.dps = 15; mp.pretty = False
+-            sage: A = [2, 1.5r, 3]
+-            sage: B = [1, -1, 2]
+-            sage: fdot(A, B)
+-            mpf('6.5')
+-            sage: list(zip(A, B))
+-            [(2, 1), (1.5, -1), (3, 2)]
+-            sage: fdot(_)
+-            mpf('6.5')
+-        """
+-        if B:
+-            A = zip(A, B)
+-        cdef MPF sre, sim, tre, tim, ure, uim, tmp
+-        cdef mpf rr
+-        cdef mpc rc
+-        cdef MPopts workopts
+-        cdef int styp, ttyp, utyp
+-        MPF_init(&sre)
+-        MPF_init(&sim)
+-        MPF_init(&tre)
+-        MPF_init(&tim)
+-        MPF_init(&ure)
+-        MPF_init(&uim)
+-        MPF_init(&tmp)
+-        workopts = global_opts
+-        workopts.prec = workopts.prec * 2 + 50
+-        workopts.rounding = ROUND_D
+-        unknown = global_context.zero
+-        styp = 1
+-        for a, b in A:
+-            ttyp = MPF_set_any(&tre, &tim, a, workopts, 0)
+-            utyp = MPF_set_any(&ure, &uim, b, workopts, 0)
+-            if utyp == 2 and conjugate:
+-                MPF_neg(&uim, &uim)
+-            if ttyp == 0 or utyp == 0:
+-                if conjugate:
+-                    b = b.conj()
+-                unknown += a * b
+-                continue
+-            styp = max(styp, ttyp)
+-            styp = max(styp, utyp)
+-            if ttyp == 1:
+-                if utyp == 1:
+-                    MPF_mul(&tre, &tre, &ure, opts_exact)
+-                    MPF_add(&sre, &sre, &tre, workopts)
+-                elif utyp == 2:
+-                    MPF_mul(&ure, &ure, &tre, opts_exact)
+-                    MPF_mul(&uim, &uim, &tre, opts_exact)
+-                    MPF_add(&sre, &sre, &ure, workopts)
+-                    MPF_add(&sim, &sim, &uim, workopts)
+-                    styp = 2
+-            elif ttyp == 2:
+-                styp = 2
+-                if utyp == 1:
+-                    MPF_mul(&tre, &tre, &ure, opts_exact)
+-                    MPF_mul(&tim, &tim, &ure, opts_exact)
+-                    MPF_add(&sre, &sre, &tre, workopts)
+-                    MPF_add(&sim, &sim, &tim, workopts)
+-                elif utyp == 2:
+-                    MPF_mul(&tmp, &tre, &ure, opts_exact)
+-                    MPF_add(&sre, &sre, &tmp, workopts)
+-                    MPF_mul(&tmp, &tim, &uim, opts_exact)
+-                    MPF_sub(&sre, &sre, &tmp, workopts)
+-                    MPF_mul(&tmp, &tim, &ure, opts_exact)
+-                    MPF_add(&sim, &sim, &tmp, workopts)
+-                    MPF_mul(&tmp, &tre, &uim, opts_exact)
+-                    MPF_add(&sim, &sim, &tmp, workopts)
+-        MPF_clear(&tre)
+-        MPF_clear(&tim)
+-        MPF_clear(&ure)
+-        MPF_clear(&uim)
+-        MPF_clear(&tmp)
+-        if styp == 1:
+-            rr = mpf.__new__(mpf)
+-            MPF_set(&rr.value, &sre)
+-            MPF_clear(&sre)
+-            MPF_clear(&sim)
+-            MPF_normalize(&rr.value, global_opts)
+-            if unknown is not global_context.zero:
+-                return ctx._stupid_add(rr, unknown)
+-            return rr
+-        elif styp == 2:
+-            rc = mpc.__new__(mpc)
+-            MPF_set(&rc.re, &sre)
+-            MPF_set(&rc.im, &sim)
+-            MPF_clear(&sre)
+-            MPF_clear(&sim)
+-            MPF_normalize(&rc.re, global_opts)
+-            MPF_normalize(&rc.im, global_opts)
+-            if unknown is not global_context.zero:
+-                return ctx._stupid_add(rc, unknown)
+-            return rc
+-        else:
+-            MPF_clear(&sre)
+-            MPF_clear(&sim)
+-            return +unknown
+-
+-    # Doing a+b directly doesn't work with mpi, presumably due to
+-    # Cython trying to be clever with the operation resolution
+-    cdef _stupid_add(ctx, a, b):
+-        return a + b
+-
+-    def _convert_param(ctx, x):
+-        """
+-        Internal function for parsing a hypergeometric function parameter.
+-
+-        This returns (T, x) where T = 'Z', 'Q', 'R', 'C' depending on the
+-        type of the parameter, and with x converted to the canonical
+-        mpmath type.
+-
+-        TESTS::
+-
+-            sage: from mpmath import mp
+-            sage: x, T = mp._convert_param(3)
+-            sage: (x, type(x).__name__, T)
+-            (3, 'int', 'Z')
+-            sage: x, T = mp._convert_param(2.5)
+-            sage: (x, type(x).__name__, T)
+-            (mpq(5,2), 'mpq', 'Q')
+-            sage: x, T = mp._convert_param(2.3)
+-            sage: (str(x), type(x).__name__, T)
+-            ('2.3', 'mpf', 'R')
+-            sage: x, T = mp._convert_param(2+3j)
+-            sage: (x, type(x).__name__, T)
+-            (mpc(real='2.0', imag='3.0'), 'mpc', 'C')
+-            sage: mp.pretty = False
+-        """
+-        cdef MPF v
+-        cdef bint ismpf, ismpc
+-        if isinstance(x, (int, Integer)):
+-            return int(x), 'Z'
+-        if isinstance(x, tuple):
+-            p, q = x
+-            p = int(p)
+-            q = int(q)
+-            if not p % q:
+-                return p // q, 'Z'
+-            return rationallib.mpq((p,q)), 'Q'
+-        if isinstance(x, str) and '/' in x:
+-            p, q = x.split('/')
+-            p = int(p)
+-            q = int(q)
+-            if not p % q:
+-                return p // q, 'Z'
+-            return rationallib.mpq((p,q)), 'Q'
+-        if isinstance(x, constant):
+-            return x, 'R'
+-        ismpf = isinstance(x, mpf)
+-        ismpc = isinstance(x, mpc)
+-        if not (ismpf or ismpc):
+-            x = global_context.convert(x)
+-            ismpf = isinstance(x, mpf)
+-            ismpc = isinstance(x, mpc)
+-            if not (ismpf or ismpc):
+-                return x, 'U'
+-        if ismpf:
+-            v = (<mpf>x).value
+-        elif ismpc:
+-            if (<mpc>x).im.special != S_ZERO:
+-                return x, 'C'
+-            x = (<mpc>x).real
+-            v = (<mpc>x).re
+-        # A real number
+-        if v.special == S_ZERO:
+-            return 0, 'Z'
+-        if v.special != S_NORMAL:
+-            return x, 'U'
+-        if mpz_sgn(v.exp) >= 0:
+-            return (mpzi(v.man) << mpzi(v.exp)), 'Z'
+-        if mpz_cmp_si(v.exp, -4) > 0:
+-            p = mpzi(v.man)
+-            q = 1 << (-mpzi(v.exp))
+-            return rationallib.mpq((p,q)), 'Q'
+-        return x, 'R'
+-
+-    def mag(ctx, x):
+-        """
+-        Quick logarithmic magnitude estimate of a number. Returns an
+-        integer or infinity `m` such that `|x| <= 2^m`. It is not
+-        guaranteed that `m` is an optimal bound, but it will never
+-        be too large by more than 2 (and probably not more than 1).
+-
+-        TESTS::
+-
+-            sage: from mpmath import *
+-            sage: mag(10), mag(10.0), mag(mpf(10)), int(ceil(log(10,2)))
+-            (4, 4, 4, 4)
+-            sage: mag(10j), mag(10+10j)
+-            (4, 5)
+-            sage: mag(0.01), int(ceil(log(0.01,2)))
+-            (-6, -6)
+-            sage: mag(0), mag(inf), mag(-inf), mag(nan)
+-            (mpf('-inf'), mpf('+inf'), mpf('+inf'), mpf('nan'))
+-
+-    ::
+-
+-            sage: class MyInt(int):
+-            ....:     pass
+-            sage: class MyFloat(float):
+-            ....:     pass
+-            sage: mag(MyInt(10))
+-            4
+-        """
+-        cdef int typ
+-        if isinstance(x, (int, Integer)):
+-            mpz_set_integer(tmp_opx_re.man, x)
+-            if mpz_sgn(tmp_opx_re.man) == 0:
+-                return global_context.ninf
+-            else:
+-                return mpz_sizeinbase(tmp_opx_re.man,2)
+-        if isinstance(x, rationallib.mpq):
+-            p, q = x._mpq_
+-            mpz_set_integer(tmp_opx_re.man, int(p))
+-            if mpz_sgn(tmp_opx_re.man) == 0:
+-                return global_context.ninf
+-            mpz_set_integer(tmp_opx_re.exp, int(q))
+-            return 1 + mpz_sizeinbase(tmp_opx_re.man,2) + mpz_sizeinbase(tmp_opx_re.exp,2)
+-        typ = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, global_opts, False)
+-        if typ == 1:
+-            if tmp_opx_re.special == S_ZERO:
+-                return global_context.ninf
+-            if tmp_opx_re.special == S_INF or tmp_opx_re.special == S_NINF:
+-                return global_context.inf
+-            if tmp_opx_re.special != S_NORMAL:
+-                return global_context.nan
+-            mpz_add_ui(tmp_opx_re.exp, tmp_opx_re.exp, mpz_sizeinbase(tmp_opx_re.man, 2))
+-            return mpzi(tmp_opx_re.exp)
+-        if typ == 2:
+-            if tmp_opx_re.special == S_NAN or tmp_opx_im.special == S_NAN:
+-                return global_context.nan
+-            if tmp_opx_re.special == S_INF or tmp_opx_im.special == S_NINF or \
+-               tmp_opx_im.special == S_INF or tmp_opx_im.special == S_NINF:
+-                return global_context.inf
+-            if tmp_opx_re.special == S_ZERO:
+-                if tmp_opx_im.special == S_ZERO:
+-                    return global_context.ninf
+-                else:
+-                    mpz_add_ui(tmp_opx_im.exp, tmp_opx_im.exp, mpz_sizeinbase(tmp_opx_im.man, 2))
+-                    return mpzi(tmp_opx_im.exp)
+-            elif tmp_opx_im.special == S_ZERO:
+-                mpz_add_ui(tmp_opx_re.exp, tmp_opx_re.exp, mpz_sizeinbase(tmp_opx_re.man, 2))
+-                return mpzi(tmp_opx_re.exp)
+-            mpz_add_ui(tmp_opx_im.exp, tmp_opx_im.exp, mpz_sizeinbase(tmp_opx_im.man, 2))
+-            mpz_add_ui(tmp_opx_re.exp, tmp_opx_re.exp, mpz_sizeinbase(tmp_opx_re.man, 2))
+-            if mpz_cmp(tmp_opx_re.exp, tmp_opx_im.exp) >= 0:
+-                mpz_add_ui(tmp_opx_re.exp, tmp_opx_re.exp, 1)
+-                return mpzi(tmp_opx_re.exp)
+-            else:
+-                mpz_add_ui(tmp_opx_im.exp, tmp_opx_im.exp, 1)
+-                return mpzi(tmp_opx_im.exp)
+-        raise TypeError("requires an mpf/mpc")
+-
+-    def _wrap_libmp_function(ctx, mpf_f, mpc_f=None, mpi_f=None, doc="<no doc>"):
+-        """
+-        Create a high-level mpmath function from base functions working
+-        on mpf, mpc and mpi tuple data.
+-
+-        TESTS::
+-
+-            sage: from mpmath import mp
+-            sage: mp.pretty = False
+-            sage: f = lambda x, prec, rnd: x
+-            sage: g = mp._wrap_libmp_function(f)
+-            sage: g(mp.mpf(2))
+-            mpf('2.0')
+-        """
+-        name = mpf_f.__name__[4:]
+-        doc = function_docs.__dict__.get(name, "Computes the %s of x" % doc)
+-        # workaround lack of closures in Cython
+-        f_cls = type(name, (wrapped_libmp_function,), {'__doc__':doc})
+-        f = f_cls(mpf_f, mpc_f, mpi_f, doc)
+-        return f
+-
+-    @classmethod
+-    def _wrap_specfun(cls, name, f, wrap):
+-        """
+-        Add the given function as a method to the context object,
+-        optionally wrapping it to do automatic conversions and
+-        allocating a small number of guard bits to suppress
+-        typical roundoff error.
+-
+-        TESTS::
+-
+-            sage: from mpmath import mp
+-            sage: mp._wrap_specfun("foo", lambda ctx, x: ctx.prec + x, True)
+-            sage: mp.pretty = False; mp.prec = 53
+-            sage: mp.foo(5)       # 53 + 10 guard bits + 5
+-            mpf('68.0')
+-        """
+-        doc = function_docs.__dict__.get(name, getattr(f, '__doc__', '<no doc>'))
+-        if wrap:
+-            # workaround lack of closures in Cython
+-            f_wrapped_cls = type(name, (wrapped_specfun,), {'__doc__':doc})
+-            f_wrapped = f_wrapped_cls(name, f)
+-        else:
+-            f_wrapped = f
+-        f_wrapped.__doc__ = doc
+-        setattr(cls, name, f_wrapped)
+-
+-    cdef MPopts _fun_get_opts(ctx, kwargs) noexcept:
+-        """
+-        Helper function that extracts precision and rounding information
+-        from kwargs, or returns the global working precision and rounding
+-        if no options are specified.
+-        """
+-        cdef MPopts opts
+-        opts.prec = global_opts.prec
+-        opts.rounding = global_opts.rounding
+-        if kwargs:
+-            if 'prec' in kwargs:
+-                opts.prec = int(kwargs['prec'])
+-            if 'dps' in kwargs:
+-                opts.prec = libmp.dps_to_prec(int(kwargs['dps']))
+-            if 'rounding' in kwargs:
+-                opts.rounding = rndmode_from_python(kwargs['rounding'])
+-        return opts
+-
+-    def _sage_sqrt(ctx, x, **kwargs):
+-        """
+-        Square root of an mpmath number x, using the Sage mpmath backend.
+-
+-        TESTS::
+-
+-            sage: from mpmath import mp
+-            sage: mp.dps = 15
+-            sage: print(mp.sqrt(2))   # indirect doctest
+-            1.4142135623731
+-            sage: print(mp.sqrt(-2))
+-            (0.0 + 1.4142135623731j)
+-            sage: print(mp.sqrt(2+2j))
+-            (1.55377397403004 + 0.643594252905583j)
+-        """
+-        cdef MPopts opts
+-        cdef int typx
+-        cdef mpf rr
+-        cdef mpc rc
+-        cdef tuple rev, imv
+-        opts = ctx._fun_get_opts(kwargs)
+-        typx = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, opts, 1)
+-        if typx == 1:
+-            rr = mpf.__new__(mpf)
+-            if MPF_sqrt(&rr.value, &tmp_opx_re, opts):
+-                rc = mpc.__new__(mpc)
+-                MPF_complex_sqrt(&rc.re, &rc.im, &tmp_opx_re, &MPF_C_0, opts)
+-                return rc
+-            return rr
+-        elif typx == 2:
+-            rc = mpc.__new__(mpc)
+-            MPF_complex_sqrt(&rc.re, &rc.im, &tmp_opx_re, &tmp_opx_im, opts)
+-            return rc
+-        else:
+-            raise NotImplementedError("unknown argument")
+-
+-    def _sage_exp(ctx, x, **kwargs):
+-        """
+-        Exponential function of an mpmath number x, using the Sage
+-        mpmath backend.
+-
+-        EXAMPLES::
+-
+-            sage: from mpmath import mp
+-            sage: mp.dps = 15
+-            sage: print(mp.exp(2))   # indirect doctest
+-            7.38905609893065
+-            sage: print(mp.exp(2+2j))
+-            (-3.07493232063936 + 6.71884969742825j)
+-        """
+-        cdef MPopts opts
+-        cdef int typx
+-        cdef mpf rr
+-        cdef mpc rc
+-        cdef tuple rev, imv
+-        opts = ctx._fun_get_opts(kwargs)
+-        typx = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, opts, 1)
+-        if typx == 1:
+-            rr = mpf.__new__(mpf)
+-            MPF_exp(&rr.value, &tmp_opx_re, opts)
+-            return rr
+-        elif typx == 2:
+-            rc = mpc.__new__(mpc)
+-            MPF_complex_exp(&rc.re, &rc.im, &tmp_opx_re, &tmp_opx_im, opts)
+-            return rc
+-        else:
+-            raise NotImplementedError("unknown argument")
+-
+-    def _sage_cos(ctx, x, **kwargs):
+-        """
+-        Cosine of an mpmath number x, using the Sage mpmath backend.
+-
+-        EXAMPLES::
+-
+-            sage: from mpmath import mp
+-            sage: mp.dps = 15
+-            sage: print(mp.cos(2))   # indirect doctest
+-            -0.416146836547142
+-            sage: print(mp.cos(2+2j))
+-            (-1.56562583531574 - 3.29789483631124j)
+-        """
+-        cdef MPopts opts
+-        cdef int typx
+-        cdef mpf rr
+-        cdef mpc rc
+-        cdef tuple rev, imv
+-        opts = ctx._fun_get_opts(kwargs)
+-        typx = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, global_opts, 1)
+-        if typx == 1:
+-            rr = mpf.__new__(mpf)
+-            MPF_cos(&rr.value, &tmp_opx_re, opts)
+-            return rr
+-        elif typx == 2:
+-            rev = MPF_to_tuple(&tmp_opx_re)
+-            imv = MPF_to_tuple(&tmp_opx_im)
+-            cxu = libmp.mpc_cos((rev, imv), opts.prec,
+-                rndmode_to_python(opts.rounding))
+-            rc = mpc.__new__(mpc)
+-            MPF_set_tuple(&rc.re, cxu[0])
+-            MPF_set_tuple(&rc.im, cxu[1])
+-            return rc
+-        else:
+-            raise NotImplementedError("unknown argument")
+-
+-    def _sage_sin(ctx, x, **kwargs):
+-        """
+-        Sine of an mpmath number x, using the Sage mpmath backend.
+-
+-        EXAMPLES::
+-
+-            sage: from mpmath import mp
+-            sage: mp.dps = 15
+-            sage: print(mp.sin(2))   # indirect doctest
+-            0.909297426825682
+-            sage: print(mp.sin(2+2j))
+-            (3.42095486111701 - 1.50930648532362j)
+-        """
+-        cdef MPopts opts
+-        cdef int typx
+-        cdef mpf rr
+-        cdef mpc rc
+-        cdef tuple rev, imv
+-        opts = ctx._fun_get_opts(kwargs)
+-        typx = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, global_opts, 1)
+-        if typx == 1:
+-            rr = mpf.__new__(mpf)
+-            MPF_sin(&rr.value, &tmp_opx_re, opts)
+-            return rr
+-        elif typx == 2:
+-            rev = MPF_to_tuple(&tmp_opx_re)
+-            imv = MPF_to_tuple(&tmp_opx_im)
+-            cxu = libmp.mpc_sin((rev, imv), opts.prec,
+-                rndmode_to_python(opts.rounding))
+-            rc = mpc.__new__(mpc)
+-            MPF_set_tuple(&rc.re, cxu[0])
+-            MPF_set_tuple(&rc.im, cxu[1])
+-            return rc
+-        else:
+-            raise NotImplementedError("unknown argument")
+-
+-    def _sage_ln(ctx, x, **kwargs):
+-        """
+-        Natural logarithm of an mpmath number x, using the Sage mpmath backend.
+-
+-        EXAMPLES::
+-
+-            sage: from mpmath import mp
+-            sage: print(mp.ln(2))   # indirect doctest
+-            0.693147180559945
+-            sage: print(mp.ln(-2))
+-            (0.693147180559945 + 3.14159265358979j)
+-            sage: print(mp.ln(2+2j))
+-            (1.03972077083992 + 0.785398163397448j)
+-        """
+-        cdef MPopts opts
+-        cdef int typx
+-        cdef mpf rr
+-        cdef mpc rc
+-        cdef tuple rev, imv
+-        typx = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, global_opts, 1)
+-        prec = global_opts.prec
+-        rounding = rndmode_to_python(global_opts.rounding)
+-        opts.prec = global_opts.prec
+-        opts.rounding = global_opts.rounding
+-        if kwargs:
+-            if 'prec' in kwargs: opts.prec = int(kwargs['prec'])
+-            if 'dps' in kwargs: opts.prec = libmp.dps_to_prec(int(kwargs['dps']))
+-            if 'rounding' in kwargs: opts.rounding = rndmode_from_python(kwargs['rounding'])
+-        if typx == 1:
+-            if MPF_sgn(&tmp_opx_re) < 0:
+-                rc = mpc.__new__(mpc)
+-                MPF_log(&rc.re, &tmp_opx_re, opts)
+-                MPF_set_pi(&rc.im, opts)
+-                return rc
+-            else:
+-                rr = mpf.__new__(mpf)
+-                MPF_log(&rr.value, &tmp_opx_re, opts)
+-                return rr
+-        elif typx == 2:
+-            rev = MPF_to_tuple(&tmp_opx_re)
+-            imv = MPF_to_tuple(&tmp_opx_im)
+-            cxu = libmp.mpc_log((rev, imv), opts.prec, rndmode_to_python(opts.rounding))
+-            rc = mpc.__new__(mpc)
+-            MPF_set_tuple(&rc.re, cxu[0])
+-            MPF_set_tuple(&rc.im, cxu[1])
+-            return rc
+-
+-            #rc = mpc.__new__(mpc)
+-            #MPF_complex_log(&rc.re, &rc.im, &tmp_opx_re, &tmp_opx_im, opts)
+-            #return rc
+-        else:
+-            raise NotImplementedError("unknown argument")
+-
+-
+-cdef class wrapped_libmp_function:
+-
+-    cdef public mpf_f, mpc_f, mpi_f, name, __name__, __doc__
+-
+-    def __init__(self, mpf_f, mpc_f=None, mpi_f=None, doc="<no doc>"):
+-        """
+-        Create a high-level mpmath function from base functions working
+-        on mpf, mpc and mpi tuple data.
+-
+-        TESTS::
+-
+-            sage: from sage.libs.mpmath.ext_main import wrapped_libmp_function
+-            sage: from mpmath import mp
+-            sage: from mpmath.libmp import mpf_exp, mpf_sqrt
+-            sage: f = lambda x, prec, rnd: mpf_exp(mpf_sqrt(x, prec, rnd), prec, rnd)
+-            sage: g = wrapped_libmp_function(f)
+-            sage: g(mp.mpf(3))
+-            mpf('5.6522336740340915')
+-            sage: mp.exp(mp.sqrt(3))
+-            mpf('5.6522336740340915')
+-            sage: g(mp.mpf(3), prec=10)
+-            mpf('5.65625')
+-            sage: g(mp.mpf(3), prec=10, rounding='u')
+-            mpf('5.65625')
+-            sage: g(mp.mpf(3), prec=10, rounding='d')
+-            mpf('5.640625')
+-        """
+-        self.mpf_f = mpf_f
+-        self.mpc_f = mpc_f
+-        self.mpi_f = mpi_f
+-        self.name = self.__name__ = mpf_f.__name__[4:]
+-        self.__doc__ = function_docs.__dict__.get(self.name, "Computes the %s of x" % doc)
+-
+-    def __call__(self, x, **kwargs):
+-        """
+-        A wrapped mpmath library function performs automatic
+-        conversions and uses the default working precision
+-        unless overridden::
+-
+-            sage: from mpmath import mp
+-            sage: mp.sinh(2)
+-            mpf('3.6268604078470186')
+-            sage: mp.sinh(2, prec=10)
+-            mpf('3.625')
+-            sage: mp.sinh(2, prec=10, rounding='d')
+-            mpf('3.625')
+-            sage: mp.sinh(2, prec=10, rounding='u')
+-            mpf('3.62890625')
+-        """
+-        cdef int typx
+-        cdef tuple rev, imv, reu, cxu
+-        cdef mpf rr
+-        cdef mpc rc
+-        prec = global_opts.prec
+-        rounding = rndmode_to_python(global_opts.rounding)
+-        if kwargs:
+-            if 'prec' in kwargs: prec = int(kwargs['prec'])
+-            if 'dps' in kwargs: prec = libmp.dps_to_prec(int(kwargs['dps']))
+-            if 'rounding' in kwargs: rounding = kwargs['rounding']
+-        typx = MPF_set_any(&tmp_opx_re, &tmp_opx_im, x, global_opts, 1)
+-        if typx == 1:
+-            rev = MPF_to_tuple(&tmp_opx_re)
+-            try:
+-                reu = self.mpf_f(rev, prec, rounding)
+-                rr = mpf.__new__(mpf)
+-                MPF_set_tuple(&rr.value, reu)
+-                return rr
+-            except libmp.ComplexResult:
+-                if global_context.trap_complex:
+-                    raise
+-                cxu = self.mpc_f((rev, libmp.fzero), prec, rounding)
+-                rc = mpc.__new__(mpc)
+-                MPF_set_tuple(&rc.re, cxu[0])
+-                MPF_set_tuple(&rc.im, cxu[1])
+-                return rc
+-        if typx == 2:
+-            rev = MPF_to_tuple(&tmp_opx_re)
+-            imv = MPF_to_tuple(&tmp_opx_im)
+-            cxu = self.mpc_f((rev, imv), prec, rounding)
+-            rc = mpc.__new__(mpc)
+-            MPF_set_tuple(&rc.re, cxu[0])
+-            MPF_set_tuple(&rc.im, cxu[1])
+-            return rc
+-        x = global_context.convert(x)
+-        if hasattr(x, "_mpf_") or hasattr(x, "_mpc_"):
+-            return self(x, **kwargs)
+-        #if hasattr(x, "_mpi_"):
+-        #    if self.mpi_f:
+-        #        return global_context.make_mpi(self.mpi_f(x._mpi_, prec))
+-        raise NotImplementedError("%s of a %s" % (self.name, type(x)))
+-
+-
+-cdef class wrapped_specfun:
+-    cdef public f, name, __name__, __doc__
+-
+-    def __init__(self, name, f):
+-        """
+-        Create an object holding a wrapped mpmath function
+-        along with metadata (name and documentation).
+-
+-        TESTS::
+-
+-            sage: import mpmath
+-            sage: from sage.libs.mpmath.ext_main import wrapped_specfun
+-            sage: f = wrapped_specfun("f", lambda ctx, x: x)
+-            sage: f.name
+-            'f'
+-        """
+-        self.name = self.__name__ = name
+-        self.f = f
+-        self.__doc__ = function_docs.__dict__.get(name, "<no doc>")
+-
+-    def __call__(self, *args, **kwargs):
+-        """
+-        Call wrapped mpmath function. Arguments are automatically converted
+-        to mpmath number, and the internal working precision is increased
+-        by a few bits to suppress typical rounding errors::
+-
+-            sage: from mpmath import mp
+-            sage: from sage.libs.mpmath.ext_main import wrapped_specfun
+-            sage: f = wrapped_specfun("f", lambda ctx, x: x + ctx.prec)
+-            sage: f("1")     # 53 + 10 guard bits + 1
+-            mpf('64.0')
+-        """
+-        cdef int origprec
+-        args = [global_context.convert(a) for a in args]
+-        origprec = global_opts.prec
+-        global_opts.prec += 10
+-        try:
+-            retval = self.f(global_context, *args, **kwargs)
+-        finally:
+-            global_opts.prec = origprec
+-        return +retval
+-
+-
+-cdef class mpnumber:
+-
+-    def __richcmp__(self, other, int op):
+-        """
+-        Comparison of mpmath numbers. Compatible numerical types
+-        are automatically converted to mpmath numbers::
+-
+-            sage: from mpmath import mpf, mpc
+-            sage: mpf(3) == mpc(3)
+-            True
+-            sage: mpf(3) == mpc(4)
+-            False
+-            sage: mpf(3) == float(3)
+-            True
+-            sage: mpf(3) < float(2.5)
+-            False
+-            sage: mpc(3) < mpc(4)
+-            Traceback (most recent call last):
+-                ...
+-            ValueError: cannot compare complex numbers
+-        """
+-        return binop(OP_RICHCMP+op, self, other, global_opts)
+-
+-    def __add__(self, other):
+-        """
+-        Addition of mpmath numbers. Compatible numerical types
+-        are automatically converted to mpmath numbers::
+-
+-            sage: from mpmath import mpf, mpc
+-            sage: mpf(3) + mpc(3)
+-            mpc(real='6.0', imag='0.0')
+-            sage: float(4) + mpf(3)
+-            mpf('7.0')
+-        """
+-        return binop(OP_ADD, self, other, global_opts)
+-
+-    def __sub__(self, other):
+-        """
+-        Subtraction of mpmath numbers. Compatible numerical types
+-        are automatically converted to mpmath numbers::
+-
+-            sage: from mpmath import mpf, mpc
+-            sage: mpf(5) - mpc(3)
+-            mpc(real='2.0', imag='0.0')
+-            sage: float(4) - mpf(3)
+-            mpf('1.0')
+-        """
+-        return binop(OP_SUB, self, other, global_opts)
+-
+-    def __mul__(self, other):
+-        """
+-        Multiplication of mpmath numbers. Compatible numerical types
+-        are automatically converted to mpmath numbers::
+-
+-            sage: from mpmath import mpf, mpc
+-            sage: mpf(5) * mpc(3)
+-            mpc(real='15.0', imag='0.0')
+-            sage: float(4) * mpf(3)
+-            mpf('12.0')
+-        """
+-        return binop(OP_MUL, self, other, global_opts)
+-
+-    def __truediv__(self, other):
+-        """
+-        Division of mpmath numbers. Compatible numerical types
+-        are automatically converted to mpmath numbers::
+-
+-            sage: from mpmath import mpf, mpc
+-            sage: mpf(10) / mpc(5)
+-            mpc(real='2.0', imag='0.0')
+-            sage: float(9) / mpf(3)
+-            mpf('3.0')
+-        """
+-        return binop(OP_DIV, self, other, global_opts)
+-
+-    def __mod__(self, other):
+-        """
+-        Remainder of mpmath numbers. Compatible numerical types
+-        are automatically converted to mpmath numbers::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf(12) % float(7)
+-            mpf('5.0')
+-        """
+-        return binop(OP_MOD, self, other, global_opts)
+-
+-    def __pow__(self, other, mod):
+-        """
+-        Exponentiation of mpmath numbers. Compatible numerical types
+-        are automatically converted to mpmath numbers::
+-
+-            sage: from mpmath import mpf, mpc
+-            sage: mpf(10) ** mpc(3)
+-            mpc(real='1000.0', imag='0.0')
+-            sage: mpf(3) ** float(2)
+-            mpf('9.0')
+-        """
+-        if mod is not None:
+-            raise ValueError("three-argument pow not supported")
+-        return binop(OP_POW, self, other, global_opts)
+-
+-    def ae(s, t, rel_eps=None, abs_eps=None):
+-        """
+-        Check if two numbers are approximately equal to within the specified
+-        tolerance (see mp.almosteq for documentation)::
+-
+-            sage: from mpmath import mpf, mpc
+-            sage: mpf(3).ae(mpc(3,1e-10))
+-            False
+-            sage: mpf(3).ae(mpc(3,1e-10), rel_eps=1e-5)
+-            True
+-        """
+-        return global_context.almosteq(s, t, rel_eps, abs_eps)
+-
+-
+-cdef class mpf_base(mpnumber):
+-
+-    # Shared methods for mpf, constant. However, somehow some methods
+-    # (hash?, __richcmp__?) are not inherited, so they have to
+-    # be defined multiple times. TODO: fix this.
+-
+-    def __hash__(self):
+-        """
+-        Support hashing of derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: hash(X()) == hash(float(X()))
+-            True
+-        """
+-        return libmp.mpf_hash(self._mpf_)
+-
+-    def __repr__(self):
+-        """
+-        Support repr() of derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: repr(X())
+-            "mpf('3.25')"
+-        """
+-        if global_context.pretty:
+-            return str(self)
+-        n = repr_dps(global_opts.prec)
+-        return "mpf('%s')" % to_str(self._mpf_, n)
+-
+-    def __str__(self):
+-        """
+-        Support str() of derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: str(X())
+-            '3.25'
+-        """
+-        return to_str(self._mpf_, global_context._str_digits)
+-
+-    @property
+-    def real(self):
+-        """
+-        Support real part of derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: X().real
+-            mpf('3.25')
+-        """
+-        return self
+-
+-    @property
+-    def imag(self):
+-        """
+-        Support imaginary part of derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: X().imag
+-            mpf('0.0')
+-        """
+-        return global_context.zero
+-
+-    def conjugate(self):
+-        """
+-        Support complex conjugate of derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: X().conjugate()
+-            mpf('3.25')
+-        """
+-        return self
+-
+-    @property
+-    def man(self):
+-        """
+-        Support mantissa extraction of derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: X().man
+-            13
+-        """
+-        return self._mpf_[1]
+-
+-    @property
+-    def exp(self):
+-        """
+-        Support exponent extraction of derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: X().exp
+-            -2
+-        """
+-        return self._mpf_[2]
+-
+-    @property
+-    def bc(self):
+-        """
+-        Support bitcount extraction of derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: X().bc
+-            4
+-        """
+-        return self._mpf_[3]
+-
+-    # XXX: optimize
+-    def __int__(self):
+-        """
+-        Support integer conversion for derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: int(X())
+-            3
+-        """
+-        return int(libmp.to_int(self._mpf_))
+-
+-    def __float__(self):
+-        """
+-        Support float conversion for derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: float(X())
+-            3.25
+-        """
+-        return libmp.to_float(self._mpf_)
+-
+-    def __complex__(self):
+-        """
+-        Support complex conversion for derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: complex(X())
+-            (3.25+0j)
+-        """
+-        return complex(float(self))
+-
+-    def to_fixed(self, prec):
+-        """
+-        Support conversion to a fixed-point integer for derived classes::
+-
+-            sage: from mpmath import mpf
+-            sage: from sage.libs.mpmath.ext_main import mpf_base
+-            sage: class X(mpf_base): _mpf_ = mpf(3.25)._mpf_
+-            sage: X().to_fixed(30)
+-            3489660928
+-        """
+-        return libmp.to_fixed(self._mpf_, prec)
+-
+-    def __getstate__(self):
+-        return libmp.to_pickable(self._mpf_)
+-
+-    def __setstate__(self, val):
+-        self._mpf_ = libmp.from_pickable(val)
+-
+-
+-cdef class mpf(mpf_base):
+-    """
+-    An mpf instance holds a real-valued floating-point number. mpf:s
+-    work analogously to Python floats, but support arbitrary-precision
+-    arithmetic.
+-    """
+-
+-    cdef MPF value
+-
+-    def __init__(self, x=0, **kwargs):
+-        """
+-        Create an mpf from a recognized type, optionally rounding
+-        to a precision and in a direction different from the default.
+-
+-        TESTS::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf()
+-            mpf('0.0')
+-            sage: mpf(5)
+-            mpf('5.0')
+-            sage: mpf('inf')
+-            mpf('+inf')
+-            sage: mpf('nan')
+-            mpf('nan')
+-            sage: mpf(float(2.5))
+-            mpf('2.5')
+-            sage: mpf("2.5")
+-            mpf('2.5')
+-            sage: mpf("0.3")
+-            mpf('0.29999999999999999')
+-            sage: mpf("0.3", prec=10)
+-            mpf('0.2998046875')
+-            sage: mpf("0.3", prec=10, rounding='u')
+-            mpf('0.30029296875')
+-        """
+-        cdef MPopts opts
+-        opts = global_opts
+-        if kwargs:
+-            if 'prec' in kwargs: opts.prec = int(kwargs['prec'])
+-            if 'dps' in kwargs: opts.prec = libmp.dps_to_prec(int(kwargs['dps']))
+-            if 'rounding' in kwargs: opts.rounding = rndmode_from_python(kwargs['rounding'])
+-        if MPF_set_any(&self.value, &self.value, x, opts, 1) != 1:
+-            raise TypeError
+-
+-    def __reduce__(self):
+-        """
+-        Support pickling::
+-
+-            sage: from mpmath import mpf
+-            sage: loads(dumps(mpf(0.5))) == mpf(0.5)
+-            True
+-        """
+-        return (mpf, (), self._mpf_)
+-
+-    def _get_mpf(self):
+-        """
+-        Return internal representation of ``self`` as a tuple
+-        of (sign bit, mantissa, exponent, bitcount)::
+-
+-            sage: from mpmath import mp
+-            sage: mp.mpf(-3)._mpf_
+-            (1, 3, 0, 2)
+-        """
+-        return MPF_to_tuple(&self.value)
+-
+-    def _set_mpf(self, v):
+-        """
+-        Set tuple value of ``self`` (warning: unsafe)::
+-
+-            sage: from mpmath import mp
+-            sage: x = mp.mpf(-3)
+-            sage: x._mpf_ = (1, 3, -1, 2)
+-            sage: x
+-            mpf('-1.5')
+-        """
+-        MPF_set_tuple(&self.value, v)
+-
+-    _mpf_ = property(_get_mpf, _set_mpf, doc=_get_mpf.__doc__)
+-
+-    def __bool__(self):
+-        """
+-        Return whether the number is nonzero::
+-
+-            sage: from mpmath import mpf
+-            sage: bool(mpf(3.5))
+-            True
+-            sage: bool(mpf(0.0))
+-            False
+-        """
+-        return self.value.special != S_ZERO
+-
+-    def __hash__(self):
+-        """
+-        Hash values are compatible with builtin Python floats
+-        when the precision is small enough::
+-
+-            sage: from mpmath import mpf
+-            sage: hash(mpf(2.5)) == hash(float(2.5))
+-            True
+-            sage: hash(mpf('inf')) == hash(float(Infinity))
+-            True
+-        """
+-        return libmp.mpf_hash(self._mpf_)
+-
+-    @property
+-    def real(self):
+-        """
+-        Real part, leaves ``self`` unchanged::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf(2.5).real
+-            mpf('2.5')
+-        """
+-        return self
+-
+-    @property
+-    def imag(self):
+-        """
+-        Imaginary part, equal to zero::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf(2.5).imag
+-            mpf('0.0')
+-        """
+-        return global_context.zero
+-
+-    def conjugate(self):
+-        """
+-        Complex conjugate, leaves ``self`` unchanged::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf(2.5).conjugate()
+-            mpf('2.5')
+-        """
+-        return self
+-
+-    @property
+-    def man(self):
+-        """
+-        Return the binary mantissa of ``self``. The result is a Sage
+-        integer::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf(-500.5).man
+-            1001
+-            sage: type(_)
+-            <class 'sage.rings.integer.Integer'>
+-        """
+-        return self._mpf_[1]
+-
+-    @property
+-    def exp(self):
+-        """
+-        Return the binary exponent of ``self``::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf(1/64.).exp
+-            -6
+-        """
+-        return self._mpf_[2]
+-
+-    @property
+-    def bc(self):
+-        """
+-        Return the number of bits in the mantissa of ``self``::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf(-256).bc
+-            1
+-            sage: mpf(-255).bc
+-            8
+-        """
+-        return self._mpf_[3]
+-
+-    def to_fixed(self, long prec):
+-        """
+-        Convert to a fixed-point integer of the given precision::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf(7.25).to_fixed(30)
+-            7784628224
+-            sage: ZZ(7.25 * 2**30)
+-            7784628224
+-        """
+-        # return libmp.to_fixed(self._mpf_, prec)
+-        MPF_to_fixed(tmp_mpz, &self.value, prec, False)
+-        cdef Integer r
+-        r = PY_NEW(Integer)
+-        mpz_set(r.value, tmp_mpz)
+-        return r
+-
+-    def __int__(self):
+-        """
+-        Convert to a Python integer (truncating if necessary)::
+-
+-            sage: from mpmath import mpf
+-            sage: int(mpf(2.5))
+-            2
+-            sage: type(_)
+-            <... 'int'>
+-        """
+-        MPF_to_fixed(tmp_mpz, &self.value, 0, True)
+-        return mpzi(tmp_mpz)
+-
+-    def __float__(self):
+-        """
+-        Convert to a double-precision Python float::
+-
+-            sage: from mpmath import mpf
+-            sage: float(mpf(2.5))
+-            2.5
+-            sage: type(_)
+-            <... 'float'>
+-        """
+-        return MPF_to_double(&self.value, False)
+-
+-    def __getstate__(self):
+-        """
+-        Support pickling::
+-
+-            sage: from mpmath import mpf
+-            sage: loads(dumps(mpf(3))) == mpf(3)
+-            True
+-        """
+-        return libmp.to_pickable(self._mpf_)
+-
+-    def __setstate__(self, val):
+-        """
+-        Support pickling::
+-
+-            sage: from mpmath import mpf
+-            sage: loads(dumps(mpf(3))) == mpf(3)
+-            True
+-        """
+-        self._mpf_ = libmp.from_pickable(val)
+-
+-    def __cinit__(self):
+-        """
+-        Create a new mpf::
+-
+-            sage: from mpmath import mpf
+-            sage: x = mpf()
+-        """
+-        MPF_init(&self.value)
+-
+-    def __dealloc__(self):
+-        MPF_clear(&self.value)
+-
+-    def __neg__(s):
+-        """
+-        Negate ``self``, rounded to the current working precision::
+-
+-            sage: from mpmath import mpf
+-            sage: -mpf(2)
+-            mpf('-2.0')
+-        """
+-        cdef mpf r = mpf.__new__(mpf)
+-        MPF_neg(&r.value, &s.value)
+-        MPF_normalize(&r.value, global_opts)
+-        return r
+-
+-    def __pos__(s):
+-        """
+-        Round the number to the current working precision::
+-
+-            sage: from mpmath import mp, mpf
+-            sage: mp.prec = 200
+-            sage: x = mpf(1) / 3
+-            sage: x.man
+-            1071292029505993517027974728227441735014801995855195223534251
+-            sage: mp.prec = 53
+-            sage: (+x).man
+-            6004799503160661
+-            sage: print(+x)
+-            0.333333333333333
+-        """
+-        cdef mpf r = mpf.__new__(mpf)
+-        MPF_set(&r.value, &s.value)
+-        MPF_normalize(&r.value, global_opts)
+-        return r
+-
+-    def __abs__(s):
+-        """
+-        Compute the absolute value, rounded to the current
+-        working precision::
+-
+-            sage: from mpmath import mpf
+-            sage: abs(mpf(-2))
+-            mpf('2.0')
+-        """
+-        cdef mpf r = mpf.__new__(mpf)
+-        MPF_abs(&r.value, &s.value)
+-        MPF_normalize(&r.value, global_opts)
+-        return r
+-
+-    def sqrt(s):
+-        """
+-        Compute the square root, rounded to the current
+-        working precision::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf(2).sqrt()
+-            mpf('1.4142135623730951')
+-        """
+-        cdef mpf r = mpf.__new__(mpf)
+-        MPF_sqrt(&r.value, &s.value, global_opts)
+-        return r
+-
+-    def __round__(self, *args):
+-        return round(float(self), *args)
+-
+-    def __richcmp__(self, other, int op):
+-        """
+-        Compare numbers::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf(3) > 2
+-            True
+-            sage: mpf(3) == 3
+-            True
+-            sage: mpf(3) == 4
+-            False
+-        """
+-        return binop(OP_RICHCMP+op, self, other, global_opts)
+-
+-    def _mpfr_(self, RR):
+-        """
+-        Return a Sage ``RealNumber``.
+-
+-        EXAMPLES::
+-
+-            sage: from mpmath import mpf
+-            sage: mpf(3)._mpfr_(RealField(53))
+-            3.00000000000000
+-            sage: RR(mpf(3))  # indirect doctest
+-            3.00000000000000
+-        """
+-        signbit, man, exp, bc = self._mpf_
+-        result = RR(man) << exp
+-        if signbit:
+-            result = -result
+-        return result
+-
+-
+-cdef class constant(mpf_base):
+-    """
+-    Represent a mathematical constant with dynamic precision.
+-    When printed or used in an arithmetic operation, a constant
+-    is converted to a regular mpf at the working precision. A
+-    regular mpf can also be obtained using the operation +x.
+-    """
+-
+-    cdef public name, func, __doc__
+-
+-    def __init__(self, func, name, docname=''):
+-        """
+-        Create a constant from a function computing an mpf
+-        tuple value::
+-
+-            sage: from mpmath import mp, mpf
+-            sage: q = mp.constant(lambda prec, rnd: mpf(0.25)._mpf_, "quarter", "q")
+-            sage: q
+-            <quarter: 0.25~>
+-            sage: q + 1
+-            mpf('1.25')
+-        """
+-        self.name = name
+-        self.func = func
+-        self.__doc__ = getattr(function_docs, docname, '')
+-
+-    def __call__(self, prec=None, dps=None, rounding=None):
+-        """
+-        Calling a constant is equivalent to rounding it. A
+-        custom precision and rounding direction can also be passed::
+-
+-            sage: from mpmath import pi
+-            sage: print(pi(dps=5, rounding='d'))
+-            3.1415901184082
+-            sage: print(pi(dps=5, rounding='u'))
+-            3.14159393310547
+-        """
+-        prec2 = global_opts.prec
+-        rounding2 = rndmode_to_python(global_opts.rounding)
+-        if not prec: prec = prec2
+-        if not rounding: rounding = rounding2
+-        if dps: prec = dps_to_prec(dps)
+-        return global_context.make_mpf(self.func(prec, rounding))
+-
+-    @property
+-    def _mpf_(self):
+-        """
+-        Return the tuple value of the constant as if rounded
+-        to an mpf at the present working precision::
+-
+-            sage: from mpmath import pi
+-            sage: pi._mpf_
+-            (0, 884279719003555, -48, 50)
+-            sage: 884279719003555 / 2.0**48
+-            3.14159265358979
+-        """
+-        prec = global_opts.prec
+-        rounding = rndmode_to_python(global_opts.rounding)
+-        return self.func(prec, rounding)
+-
+-    def __repr__(self):
+-        """
+-        Represent ``self`` as a string. With mp.pretty=False, the
+-        representation differs from that of an ordinary mpf::
+-
+-            sage: from mpmath import mp
+-            sage: mp2 = mp.clone()
+-            sage: mp2.pretty = True
+-            sage: repr(mp2.pi)
+-            '3.14159265358979'
+-            sage: mp2.pretty = False
+-            sage: repr(mp2.pi)
+-            '<pi: 3.14159~>'
+-        """
+-        if global_context.pretty:
+-            return str(self)
+-        return "<%s: %s~>" % (self.name, global_context.nstr(self))
+-
+-    def __bool__(self):
+-        """
+-        Return whether the constant is nonzero::
+-
+-            sage: from mpmath import pi
+-            sage: bool(pi)
+-            True
+-        """
+-        return self._mpf_ != libmp.fzero
+-
+-    def __neg__(self):
+-        """
+-        Negate the constant::
+-
+-            sage: from mpmath import pi
+-            sage: -pi
+-            mpf('-3.1415926535897931')
+-        """
+-        return -mpf(self)
+-
+-    def __pos__(self):
+-        """
+-        Instantiate the constant as an mpf::
+-
+-            sage: from mpmath import pi
+-            sage: +pi
+-            mpf('3.1415926535897931')
+-        """
+-        return mpf(self)
+-
+-    def __abs__(self):
+-        """
+-        Compute the absolute value of the constant::
+-
+-            sage: from mpmath import pi
+-            sage: abs(pi)
+-            mpf('3.1415926535897931')
+-        """
+-        return abs(mpf(self))
+-
+-    def sqrt(self):
+-        """
+-        Compute the square root of the constant::
+-
+-            sage: from mpmath import pi
+-            sage: print(pi.sqrt())
+-            1.77245385090552
+-        """
+-        return mpf(self).sqrt()
+-
+-    # XXX: optimize
+-    def to_fixed(self, prec):
+-        """
+-        Convert to a fixed-point integer::
+-
+-            sage: from mpmath import pi
+-            sage: float(pi.to_fixed(10) / 2.0**10)
+-            3.140625
+-        """
+-        return libmp.to_fixed(self._mpf_, prec)
+-
+-    def __getstate__(self):
+-        return libmp.to_pickable(self._mpf_)
+-
+-    def __setstate__(self, val):
+-        self._mpf_ = libmp.from_pickable(val)
+-
+-    # WHY is this method not inherited from the base class by Cython?
+-    def __hash__(self):
+-        """
+-        A constant hashes as if instantiated to a number::
+-
+-            sage: from mpmath import pi
+-            sage: hash(pi) == hash(+pi)
+-            True
+-        """
+-        return libmp.mpf_hash(self._mpf_)
+-
+-    def __richcmp__(self, other, int op):
+-        """
+-        A constant hashes as if instantiated to a number::
+-
+-            sage: from mpmath import pi
+-            sage: pi == pi
+-            True
+-            sage: pi > 3.14
+-            True
+-            sage: pi < 3.14
+-            False
+-        """
+-        return binop(OP_RICHCMP+op, self, other, global_opts)
+-
+-
+-cdef class mpc(mpnumber):
+-    """
+-    An mpc represents a complex number using a pair of mpf:s (one
+-    for the real part and another for the imaginary part.) The mpc
+-    class behaves fairly similarly to Python's complex type.
+-    """
+-
+-    cdef MPF re
+-    cdef MPF im
+-
+-    def __init__(self, real=0, imag=0):
+-        """
+-        Create a new mpc::
+-
+-            sage: from mpmath import mpc
+-            sage: mpc() == mpc(0,0) == mpc(1,0)-1 == 0
+-            True
+-        """
+-        cdef int typx, typy
+-        typx = MPF_set_any(&self.re, &self.im, real, global_opts, 1)
+-        if typx == 2:
+-            typy = 1
+-        else:
+-            typy = MPF_set_any(&self.im, &self.im, imag, global_opts, 1)
+-        if typx == 0 or typy != 1:
+-            raise TypeError
+-
+-    def __cinit__(self):
+-        """
+-        Create a new mpc::
+-
+-            sage: from mpmath import mpc
+-            sage: x = mpc()
+-        """
+-        MPF_init(&self.re)
+-        MPF_init(&self.im)
+-
+-    def __dealloc__(self):
+-        MPF_clear(&self.re)
+-        MPF_clear(&self.im)
+-
+-    def __reduce__(self):
+-        """
+-        Support pickling::
+-
+-            sage: from mpmath import mpc
+-            sage: loads(dumps(mpc(1,3))) == mpc(1,3)
+-            True
+-        """
+-        return (mpc, (), self._mpc_)
+-
+-    def __setstate__(self, val):
+-        """
+-        Support pickling::
+-
+-            sage: from mpmath import mpc
+-            sage: loads(dumps(mpc(1,3))) == mpc(1,3)
+-            True
+-        """
+-        self._mpc_ = val[0], val[1]
+-
+-    def __repr__(self):
+-        """
+-        TESTS::
+-
+-            sage: from mpmath import mp
+-            sage: mp2 = mp.clone()
+-            sage: mp2.pretty = True
+-            sage: repr(mp2.mpc(2,3))
+-            '(2.0 + 3.0j)'
+-            sage: mp2.pretty = False
+-            sage: repr(mp2.mpc(2,3))
+-            "mpc(real='2.0', imag='3.0')"
+-        """
+-        if global_context.pretty:
+-            return str(self)
+-        re, im = self._mpc_
+-        n = repr_dps(global_opts.prec)
+-        return "mpc(real='%s', imag='%s')" % (to_str(re, n), to_str(im, n))
+-
+-    def __str__(s):
+-        """
+-        TESTS::
+-
+-            sage: from mpmath import mp
+-            sage: str(mp.mpc(2,3))
+-            '(2.0 + 3.0j)'
+-        """
+-        return "(%s)" % libmp.mpc_to_str(s._mpc_, global_context._str_digits)
+-
+-    def __bool__(self):
+-        """
+-        TESTS::
+-
+-            sage: from mpmath import mp
+-            sage: bool(mp.mpc(0,1))
+-            True
+-            sage: bool(mp.mpc(1,0))
+-            True
+-            sage: bool(mp.mpc(0,0))
+-            False
+-        """
+-        return self.re.special != S_ZERO or self.im.special != S_ZERO
+-
+-    #def __complex__(self):
+-    #    a, b = self._mpc_
+-    #    return complex(libmp.to_float(a), libmp.to_float(b))
+-
+-    def __complex__(self):
+-        """
+-        TESTS::
+-
+-            sage: from mpmath import mp
+-            sage: complex(mp.mpc(1,2)) == complex(1,2)
+-            True
+-        """
+-        return complex(MPF_to_double(&self.re, False), MPF_to_double(&self.im, False))
+-
+-    def _get_mpc(self):
+-        """
+-        Return tuple value of ``self``::
+-
+-            sage: from mpmath import mp
+-            sage: mp.mpc(2,3)._mpc_
+-            ((0, 1, 1, 1), (0, 3, 0, 2))
+-        """
+-        return MPF_to_tuple(&self.re), MPF_to_tuple(&self.im)
+-
+-    def _set_mpc(self, tuple v):
+-        """
+-        Set tuple value of ``self`` (warning: unsafe)::
+-
+-            sage: from mpmath import mp
+-            sage: x = mp.mpc(2,3)
+-            sage: x._mpc_ = (x._mpc_[1], x._mpc_[0])
+-            sage: x
+-            mpc(real='3.0', imag='2.0')
+-        """
+-        MPF_set_tuple(&self.re, v[0])
+-        MPF_set_tuple(&self.im, v[1])
+-
+-    _mpc_ = property(_get_mpc, _set_mpc, doc=_get_mpc.__doc__)
+-
+-    @property
+-    def real(self):
+-        """
+-        Return the real part of ``self`` as an mpf::
+-
+-            sage: from mpmath import mp
+-            sage: mp.mpc(1,2).real
+-            mpf('1.0')
+-        """
+-        cdef mpf r = mpf.__new__(mpf)
+-        MPF_set(&r.value, &self.re)
+-        return r
+-
+-    @property
+-    def imag(self):
+-        """
+-        Return the imaginary part of ``self`` as an mpf::
+-
+-            sage: from mpmath import mp
+-            sage: mp.mpc(1,2).imag
+-            mpf('2.0')
+-        """
+-        cdef mpf r = mpf.__new__(mpf)
+-        MPF_set(&r.value, &self.im)
+-        return r
+-
+-    def __hash__(self):
+-        """
+-        Return the hash value of ``self``::
+-
+-        EXAMPLES::
+-
+-            sage: from mpmath import mp
+-            sage: hash(mp.mpc(2,3)) == hash(complex(2,3))
+-            True
+-
+-        TESTS:
+-
+-        Check that :issue:`31676` is fixed::
+-
+-            sage: from mpmath import mpc
+-            sage: hash(mpc(1, -1)) == hash(mpc(-1, -1))  # should not return OverflowError: Python int too large to convert to C ssize_t
+-            False
+-        """
+-        return hash(libmp.mpc_hash(self._mpc_))
+-
+-    def __neg__(s):
+-        """
+-        Negate the number::
+-
+-            sage: from mpmath import mpc
+-            sage: -mpc(1,2)
+-            mpc(real='-1.0', imag='-2.0')
+-        """
+-        cdef mpc r = mpc.__new__(mpc)
+-        MPF_neg(&r.re, &s.re)
+-        MPF_neg(&r.im, &s.im)
+-        MPF_normalize(&r.re, global_opts)
+-        MPF_normalize(&r.im, global_opts)
+-        return r
+-
+-    def conjugate(s):
+-        """
+-        Return the complex conjugate::
+-
+-            sage: from mpmath import mpc
+-            sage: mpc(1,2).conjugate()
+-            mpc(real='1.0', imag='-2.0')
+-        """
+-        cdef mpc r = mpc.__new__(mpc)
+-        MPF_set(&r.re, &s.re)
+-        MPF_neg(&r.im, &s.im)
+-        MPF_normalize(&r.re, global_opts)
+-        MPF_normalize(&r.im, global_opts)
+-        return r
+-
+-    def __pos__(s):
+-        """
+-        Round the number to the current working precision::
+-
+-            sage: from mpmath import mp
+-            sage: mp.prec = 200
+-            sage: x = mp.mpc(1) / 3
+-            sage: x.real.man
+-            1071292029505993517027974728227441735014801995855195223534251
+-            sage: mp.prec = 53
+-            sage: +x
+-            mpc(real='0.33333333333333331', imag='0.0')
+-            sage: (+x).real.man
+-            6004799503160661
+-        """
+-        cdef mpc r = mpc.__new__(mpc)
+-        MPF_set(&r.re, &s.re)
+-        MPF_set(&r.im, &s.im)
+-        MPF_normalize(&r.re, global_opts)
+-        MPF_normalize(&r.im, global_opts)
+-        return r
+-
+-    def __abs__(s):
+-        """
+-        Return the absolute value of ``self``::
+-
+-            sage: from mpmath import mpc
+-            sage: abs(mpc(3,4))
+-            mpf('5.0')
+-        """
+-        cdef mpf r = mpf.__new__(mpf)
+-        MPF_hypot(&r.value, &s.re, &s.im, global_opts)
+-        return r
+-
+-    def __richcmp__(self, other, int op):
+-        """
+-        Complex numbers can be compared for equality::
+-
+-            sage: from mpmath import mpc
+-            sage: mpc(2,3) == complex(2,3)
+-            True
+-            sage: mpc(-2,3) == complex(2,3)
+-            False
+-            sage: mpc(-2,3) != complex(2,3)
+-            True
+-        """
+-        return binop(OP_RICHCMP+op, self, other, global_opts)
+-
+-    def _complex_mpfr_field_(self, CC):
+-        """
+-        Return a Sage complex number.
+-
+-        EXAMPLES::
+-
+-            sage: from mpmath import mpc
+-            sage: CC(mpc(1,2))  # indirect doctest
+-            1.00000000000000 + 2.00000000000000*I
+-            sage: mpc(1,2)._complex_mpfr_field_(CC)
+-            1.00000000000000 + 2.00000000000000*I
+-        """
+-        RR = CC._real_field()
+-        return CC((self.real._mpfr_(RR), self.imag._mpfr_(RR)))
+-
+-
+-def hypsum_internal(int p, int q, param_types, str ztype, coeffs, z,
+-    long prec, long wp, long epsshift, dict magnitude_check, kwargs):
+-    """
+-    Internal summation routine for hypergeometric series (wraps
+-    extension function MPF_hypsum to handle mpf/mpc types).
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath import mp  # indirect doctest
+-        sage: mp.dps = 15
+-        sage: print(mp.hyp1f1(1,2,3))
+-        6.36184564106256
+-
+-    .. TODO::
+-
+-        convert mpf/mpc parameters to fixed-point numbers here
+-        instead of converting to tuples within MPF_hypsum.
+-    """
+-    cdef mpf f
+-    cdef mpc c
+-    c = mpc.__new__(mpc)
+-    have_complex, magn = MPF_hypsum(&c.re, &c.im, p, q, param_types,
+-        ztype, coeffs, z, prec, wp, epsshift, magnitude_check, kwargs)
+-    if have_complex:
+-        v = c
+-    else:
+-        f = mpf.__new__(mpf)
+-        MPF_set(&f.value, &c.re)
+-        v = f
+-    return v, have_complex, magn
+diff --git a/src/sage/libs/mpmath/meson.build b/src/sage/libs/mpmath/meson.build
+index cc8cdc84e98..99de8530686 100644
+--- a/src/sage/libs/mpmath/meson.build
++++ b/src/sage/libs/mpmath/meson.build
+@@ -1,20 +1,12 @@
+ py.install_sources(
+   '__init__.py',
+   'all.py',
+-  'ext_impl.pxd',
+-  'ext_impl.pyx',
+-  'ext_libmp.pyx',
+-  'ext_main.pxd',
+-  'ext_main.pyx',
+   'utils.pxd',
+   'utils.pyx',
+   subdir: 'sage/libs/mpmath',
+ )
+ 
+ extension_data = {
+-  'ext_impl' : files('ext_impl.pyx'),
+-  'ext_libmp' : files('ext_libmp.pyx'),
+-  'ext_main' : files('ext_main.pyx'),
+   'utils' : files('utils.pyx'),
+ }
+ 
+@@ -25,7 +17,7 @@ foreach name, pyx : extension_data
+     subdir: 'sage/libs/mpmath',
+     install: true,
+     include_directories: [inc_cpython, inc_ext, inc_rings],
+-    dependencies: [py_dep, cysignals, gmp, mpfr],
++    dependencies: [py_dep, cysignals, gmp, gmpy2, mpfr],
+   )
+ endforeach
+ 
+diff --git a/src/sage/libs/mpmath/utils.pyx b/src/sage/libs/mpmath/utils.pyx
+index 1acf14ea540..08271197fd8 100644
+--- a/src/sage/libs/mpmath/utils.pyx
++++ b/src/sage/libs/mpmath/utils.pyx
+@@ -1,9 +1,9 @@
+ """
+ Utilities for Sage-mpmath interaction
+-
+-Also patches some mpmath functions for speed
+ """
+ 
++cimport gmpy2
++
+ from sage.ext.stdsage cimport PY_NEW
+ 
+ from sage.rings.integer cimport Integer
+@@ -16,145 +16,7 @@ from sage.libs.gmp.all cimport *
+ 
+ from sage.rings.real_mpfr cimport RealField
+ 
+-cpdef int bitcount(n) noexcept:
+-    """
+-    Bitcount of a Sage Integer or Python int/long.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import bitcount
+-        sage: bitcount(0)
+-        0
+-        sage: bitcount(1)
+-        1
+-        sage: bitcount(100)
+-        7
+-        sage: bitcount(-100)
+-        7
+-        sage: bitcount(2r)
+-        2
+-        sage: bitcount(2L)
+-        2
+-    """
+-    cdef Integer m
+-    if isinstance(n, Integer):
+-        m = <Integer>n
+-    else:
+-        m = Integer(n)
+-    if mpz_sgn(m.value) == 0:
+-        return 0
+-    return mpz_sizeinbase(m.value, 2)
+-
+-cpdef isqrt(n):
+-    """
+-    Square root (rounded to floor) of a Sage Integer or Python int/long.
+-    The result is a Sage Integer.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import isqrt
+-        sage: isqrt(0)
+-        0
+-        sage: isqrt(100)
+-        10
+-        sage: isqrt(10)
+-        3
+-        sage: isqrt(10r)
+-        3
+-        sage: isqrt(10L)
+-        3
+-    """
+-    cdef Integer m, y
+-    if isinstance(n, Integer):
+-        m = <Integer>n
+-    else:
+-        m = Integer(n)
+-    if mpz_sgn(m.value) < 0:
+-        raise ValueError("square root of negative integer not defined.")
+-    y = PY_NEW(Integer)
+-    mpz_sqrt(y.value, m.value)
+-    return y
+-
+-cpdef from_man_exp(man, exp, long prec=0, str rnd='d'):
+-    """
+-    Create normalized mpf value tuple from mantissa and exponent.
+-
+-    With prec > 0, rounds the result in the desired direction
+-    if necessary.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import from_man_exp
+-        sage: from_man_exp(-6, -1)
+-        (1, 3, 0, 2)
+-        sage: from_man_exp(-6, -1, 1, 'd')
+-        (1, 1, 1, 1)
+-        sage: from_man_exp(-6, -1, 1, 'u')
+-        (1, 1, 2, 1)
+-    """
+-    cdef Integer res
+-    cdef long bc
+-    res = Integer(man)
+-    bc = mpz_sizeinbase(res.value, 2)
+-    if not prec:
+-        prec = bc
+-    if mpz_sgn(res.value) < 0:
+-        mpz_neg(res.value, res.value)
+-        return normalize(1, res, exp, bc, prec, rnd)
+-    else:
+-        return normalize(0, res, exp, bc, prec, rnd)
+-
+-cpdef normalize(long sign, Integer man, exp, long bc, long prec, str rnd):
+-    """
+-    Create normalized mpf value tuple from full list of components.
+-
+-    EXAMPLES::
+-
+-        sage: from mpmath.libmp import normalize
+-        sage: normalize(0, 4, 5, 3, 53, 'n')
+-        (0, 1, 7, 1)
+-    """
+-    cdef long shift
+-    cdef Integer res
+-    cdef unsigned long trail
+-    if mpz_sgn(man.value) == 0:
+-        from mpmath.libmp import fzero
+-        return fzero
+-    if bc <= prec and mpz_odd_p(man.value):
+-        return (sign, man, exp, bc)
+-    shift = bc - prec
+-    res = PY_NEW(Integer)
+-    if shift > 0:
+-        if rnd == 'n':
+-            if mpz_tstbit(man.value, shift-1) and (mpz_tstbit(man.value, shift)
+-                or (mpz_scan1(man.value, 0) < (shift-1))):
+-                mpz_cdiv_q_2exp(res.value, man.value, shift)
+-            else:
+-                mpz_fdiv_q_2exp(res.value, man.value, shift)
+-        elif rnd == 'd':
+-            mpz_fdiv_q_2exp(res.value, man.value, shift)
+-        elif rnd == 'f':
+-            if sign:
+-                mpz_cdiv_q_2exp(res.value, man.value, shift)
+-            else:
+-                mpz_fdiv_q_2exp(res.value, man.value, shift)
+-        elif rnd == 'c':
+-            if sign:
+-                mpz_fdiv_q_2exp(res.value, man.value, shift)
+-            else:
+-                mpz_cdiv_q_2exp(res.value, man.value, shift)
+-        elif rnd == 'u':
+-            mpz_cdiv_q_2exp(res.value, man.value, shift)
+-        exp += shift
+-    else:
+-        mpz_set(res.value, man.value)
+-    # Strip trailing bits
+-    trail = mpz_scan1(res.value, 0)
+-    if 0 < trail < bc:
+-        mpz_tdiv_q_2exp(res.value, res.value, trail)
+-        exp += trail
+-    bc = mpz_sizeinbase(res.value, 2)
+-    return (sign, res, int(exp), bc)
++gmpy2.import_gmpy2()
+ 
+ cdef mpfr_from_mpfval(mpfr_t res, tuple x):
+     """
+@@ -162,11 +24,11 @@ cdef mpfr_from_mpfval(mpfr_t res, tuple x):
+     data tuple.
+     """
+     cdef int sign
+-    cdef Integer man
++    cdef gmpy2.mpz man
+     cdef long exp
+     sign, man, exp, _ = x
+     if man:
+-        mpfr_set_z(res, man.value, MPFR_RNDZ)
++        mpfr_set_z(res, man.z, MPFR_RNDZ)
+         if sign:
+             mpfr_neg(res, res, MPFR_RNDZ)
+         mpfr_mul_2si(res, res, exp, MPFR_RNDZ)
+@@ -210,7 +72,7 @@ cdef mpfr_to_mpfval(mpfr_t value):
+         mpz_tdiv_q_2exp(man.value, man.value, trailing)
+         exp += trailing
+     bc = mpz_sizeinbase(man.value, 2)
+-    return (sign, man, int(exp), bc)
++    return (sign, man.__mpz__(), int(exp), bc)
+ 
+ 
+ def mpmath_to_sage(x, prec):
+@@ -305,7 +167,7 @@ def sage_to_mpmath(x, prec):
+         sage: print(a.sage_to_mpmath(1+pi, 53))
+         4.14159265358979
+         sage: a.sage_to_mpmath(infinity, 53)
+-        mpf('+inf')
++        mpf('inf')
+         sage: a.sage_to_mpmath(-infinity, 53)
+         mpf('-inf')
+         sage: a.sage_to_mpmath(NaN, 53)
+@@ -414,7 +276,7 @@ def call(func, *args, **kwargs):
+     Check that :issue:`11885` is fixed::
+ 
+         sage: a.call(a.ei, 1.0r, parent=float)
+-        1.8951178163559366
++        1.8951178163559368
+ 
+     Check that :issue:`14984` is fixed::
+ 
+diff --git a/src/sage/rings/real_mpfr.pyx b/src/sage/rings/real_mpfr.pyx
+index f0b5b713fe1..1ed67bfb906 100644
+--- a/src/sage/rings/real_mpfr.pyx
++++ b/src/sage/rings/real_mpfr.pyx
+@@ -152,8 +152,6 @@ from sage.structure.richcmp cimport rich_to_bool_sgn
+ cdef bin_op
+ from sage.structure.element import bin_op
+ 
+-from sage.libs.mpmath.utils cimport mpfr_to_mpfval
+-
+ from sage.rings.integer cimport Integer
+ from sage.rings.rational cimport Rational
+ from sage.rings.real_double cimport RealDoubleElement
+diff --git a/src/sage/structure/coerce.pyx b/src/sage/structure/coerce.pyx
+index 98ffac46406..7f1eaabf623 100644
+--- a/src/sage/structure/coerce.pyx
++++ b/src/sage/structure/coerce.pyx
+@@ -143,6 +143,13 @@ cpdef py_scalar_parent(py_type):
+         Real Double Field
+         sage: py_scalar_parent(gmpy2.mpc)                                               # needs sage.rings.complex_double
+         Complex Double Field
++
++        sage: # needs mpmath
++        sage: import mpmath
++        sage: py_scalar_parent(mpmath.mpf)
++        Real Double Field
++        sage: py_scalar_parent(mpmath.mpc)                                              # needs sage.rings.complex_double
++        Complex Double Field
+     """
+     if issubclass(py_type, int):
+         import sage.rings.integer_ring
+@@ -150,39 +157,46 @@ cpdef py_scalar_parent(py_type):
+     if py_type is FractionType:
+         import sage.rings.rational_field
+         return sage.rings.rational_field.QQ
+-    elif issubclass(py_type, float):
++    if issubclass(py_type, float):
+         import sage.rings.real_double
+         return sage.rings.real_double.RDF
+-    elif issubclass(py_type, complex):
++    if issubclass(py_type, complex):
+         import sage.rings.complex_double
+         return sage.rings.complex_double.CDF
+-    elif is_numpy_type(py_type):
++    if is_numpy_type(py_type):
+         import numpy
+         if issubclass(py_type, numpy.integer):
+             import sage.rings.integer_ring
+             return sage.rings.integer_ring.ZZ
+-        elif issubclass(py_type, numpy.floating):
++        if issubclass(py_type, numpy.floating):
+             import sage.rings.real_double
+             return sage.rings.real_double.RDF
+-        elif issubclass(py_type, numpy.complexfloating):
++        if issubclass(py_type, numpy.complexfloating):
+             import sage.rings.complex_double
+             return sage.rings.complex_double.CDF
+-        else:
+-            return None
+-    elif issubclass(py_type, gmpy2.mpz):
++        return None
++    if issubclass(py_type, gmpy2.mpz):
+         import sage.rings.integer_ring
+         return sage.rings.integer_ring.ZZ
+-    elif issubclass(py_type, gmpy2.mpq):
++    if issubclass(py_type, gmpy2.mpq):
+         import sage.rings.rational_field
+         return sage.rings.rational_field.QQ
+-    elif issubclass(py_type, gmpy2.mpfr):
++    if issubclass(py_type, gmpy2.mpfr):
+         import sage.rings.real_double
+         return sage.rings.real_double.RDF
+-    elif issubclass(py_type, gmpy2.mpc):
++    if issubclass(py_type, gmpy2.mpc):
+         import sage.rings.complex_double
+         return sage.rings.complex_double.CDF
+-    else:
++    if is_mpmath_type(py_type):
++        import mpmath
++        if issubclass(py_type, mpmath.mpf):
++            from sage.rings.real_double import RDF
++            return RDF
++        if issubclass(py_type, mpmath.mpc):
++            from sage.rings.complex_double import CDF
++            return CDF
+         return None
++    return None
+ 
+ cpdef py_scalar_to_element(x):
+     """
+@@ -468,10 +482,10 @@ cpdef bint is_numpy_type(t) noexcept:
+         return True
+     return False
+ 
++
+ cpdef bint is_mpmath_type(t) noexcept:
+     r"""
+-    Check whether the type ``t`` is a type whose name starts with either
+-    ``mpmath.`` or ``sage.libs.mpmath.``.
++    Check whether the type ``t`` is a type whose name starts with ``mpmath.``
+ 
+     EXAMPLES::
+ 
+@@ -488,7 +502,7 @@ cpdef bint is_mpmath_type(t) noexcept:
+         True
+     """
+     return isinstance(t, type) and \
+-           strncmp((<PyTypeObject*>t).tp_name, "sage.libs.mpmath.", 17) == 0
++           t.__module__.startswith("mpmath.")
+ 
+ 
+ cdef class CoercionModel:
+diff --git a/src/sage/functions/error.py b/src/sage/functions/error.py
+index 78eb4992aa6..8822b3ed584 100644
+--- a/src/sage/functions/error.py
++++ b/src/sage/functions/error.py
+@@ -257,7 +257,7 @@ class Function_erf(BuiltinFunction):
+             sage: erf(2).n(200)                                                         # needs sage.symbolic
+             0.99532226501895273416206925636725292861089179704006007673835
+             sage: erf(pi - 1/2*I).n(100)                                                # needs sage.symbolic
+-            1.0000111669099367825726058952 + 1.6332655417638522934072124547e-6*I
++            1.0000111669099367825726058952 + 1.6332655417638522934072124548e-6*I
+ 
+         TESTS:
+ 
+diff --git a/src/sage/functions/exp_integral.py b/src/sage/functions/exp_integral.py
+index e074c430808..09d2bbda71b 100644
+--- a/src/sage/functions/exp_integral.py
++++ b/src/sage/functions/exp_integral.py
+@@ -993,7 +993,7 @@ class Function_cos_integral(BuiltinFunction):
+             sage: N(cos_integral(10^-10), digits=30)                                    # needs sage.symbolic
+             -22.4486352650389239795759024568
+             sage: cos_integral(ComplexField(100)(I))                                    # needs sage.symbolic
+-            0.83786694098020824089467857943 + 1.5707963267948966192313216916*I
++            0.83786694098020824089467857944 + 1.5707963267948966192313216916*I
+         """
+         return _mpmath_utils_call(_mpmath_ci, z, parent=parent)
+ 
+diff --git a/src/sage/libs/mpmath/all.py b/src/sage/libs/mpmath/all.py
+index ea35faeb721..14a4be971e6 100644
+--- a/src/sage/libs/mpmath/all.py
++++ b/src/sage/libs/mpmath/all.py
+@@ -22,5 +22,5 @@ _constants_funcs = {
+ 
+ 
+ def eval_constant(name, ring):
+-    prec = ring.precision() + 20
++    prec = int(ring.precision() + 20)
+     return ring(_constants_funcs[name](prec)) >> prec
+diff --git a/src/sage/rings/complex_mpfr.pyx b/src/sage/rings/complex_mpfr.pyx
+index 11f58008fcf..ba26d194b1f 100644
+--- a/src/sage/rings/complex_mpfr.pyx
++++ b/src/sage/rings/complex_mpfr.pyx
+@@ -54,6 +54,7 @@ from sage.rings.integer_ring import ZZ
+ 
+ cimport gmpy2
+ gmpy2.import_gmpy2()
++from mpmath import mp
+ 
+ try:
+     from cypari2.gen import Gen as pari_gen
+@@ -984,7 +985,7 @@ cdef class ComplexNumber(sage.structure.element.FieldElement):
+                 real, imag = real
+             elif isinstance(real, complex):
+                 real, imag = real.real, real.imag
+-            elif type(real) is gmpy2.mpc:
++            elif isinstance(real, (gmpy2.mpc, mp.mpc)):
+                 real, imag = (<gmpy2.mpc>real).real, (<gmpy2.mpc>real).imag
+             else:
+                 imag = 0
