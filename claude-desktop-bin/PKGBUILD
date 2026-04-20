@@ -5,7 +5,7 @@
 
 pkgname=claude-desktop-bin
 pkgver=1.3109.0
-pkgrel=1
+pkgrel=8
 pkgdesc="Claude Desktop - Linux (unofficial, from official binary)"
 arch=('x86_64' 'aarch64')
 url="https://github.com/patrickjaja/claude-desktop-bin"
