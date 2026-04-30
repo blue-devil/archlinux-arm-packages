@@ -1,4 +1,4 @@
-# Maintainer: Blue DeviL // SCT <bluedevil.SCT@gmail.com>
+# Maintainer: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 _pkgname='monkeyhex'
 _pipname="${_pkgname//-/_}"

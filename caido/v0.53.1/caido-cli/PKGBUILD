@@ -1,6 +1,6 @@
 # Maintainer: SysAdm <sysadm.archlinux@proton.me>
 # Contributor: Asuka Minato
-# Contributor: Blue DeviL // SCT <bluedevil.SCT@gmail.com>
+# Contributor: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 pkgname=caido-cli
 pkgver=0.53.1

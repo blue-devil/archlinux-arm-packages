@@ -1,4 +1,4 @@
-# Maintainer: Blue DeviL // SCT <bluedevil.SCT@gmail.com>
+# Maintainer: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 _pkgname=binwalk
 pkgname="${_pkgname}2"

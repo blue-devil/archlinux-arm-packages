@@ -1,4 +1,4 @@
-# Maintainer: Blue DeviL // SCT <bluedevil.SCT@gmail.com>
+# Maintainer: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 pkgbase=keystone-engine-git
 pkgname=('keystone-git' 'python-keystone-git')

@@ -2,7 +2,7 @@
 # Maintainer: kpcyrd <kpcyrd[at]archlinux[dot]org>
 # Contributor: Sabart Otto - Seberm <seberm[at]seberm[dot]com>
 # Contributor: Tobias Veit - nIcE <m.on.key.tobi[at]gmail[dot]com>
-# Contributor: Blue DeviL <bluedevil[dot]SCT[at]gmail[dot]com>
+# Contributor: Blue DeviL <bluedevil.SCT at proton dot me>
 
 pkgname=metasploit
 pkgver=6.4.127

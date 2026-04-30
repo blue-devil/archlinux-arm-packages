@@ -1,6 +1,6 @@
 # Maintainer: Alexey Nurmukhametov [nurmukhametov] <echo YWxleEBudXJtdWtoYW1ldG92LnJ1Cg== | base64 -d>
 # Maintainer: Bet4 <0xbet4@gmail.com>
-# Contributor: Blue DeviL // SCT <bluedevil.SCT@gmail.com>
+# Contributor: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 _pkgname=triton
 pkgname=${_pkgname}-git

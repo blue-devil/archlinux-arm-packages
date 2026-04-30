@@ -1,7 +1,7 @@
 # Maintainer: Antonio Rojas <arojas@archlinux.org>
 # Contributor: Ronald van Haren <ronald.archlinux.org>
 # Contributor: Damir Perisa <damir@archlinux.org>
-# Contributor: Blue DeviL // SCT <bluedevil.SCT@gmail.com>
+# Contributor: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 pkgbase=maxima
 pkgname=($pkgbase{,-sbcl,-ecl,-fas})
