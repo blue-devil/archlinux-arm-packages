@@ -6,9 +6,9 @@
 pkgbase=maxima
 pkgname=($pkgbase{,-sbcl,-ecl,-fas})
 pkgver=5.49.0
-_sbclver=2.6.3
-_eclver=26.3.27
-pkgrel=8
+_sbclver=2.6.5
+_eclver=26.5.5
+pkgrel=12
 pkgdesc='A sophisticated computer algebra system'
 arch=('x86_64' 'aarch64')
 license=(GPL-2.0-only)
@@ -101,4 +101,4 @@ package_maxima-fas() {
   install -Dm644 $pkgbase/src/binary-ecl/maxima.fas -t "$pkgdir"/usr/lib/ecl-$_eclver
 }
 
-# vim: set ts=4 sw=4 et:
+# vim: set ts=2 sw=2 et:
