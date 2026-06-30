@@ -2,7 +2,7 @@
 # Contributor: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 pkgname=cursor-bin
-pkgver=3.7.42
+pkgver=3.9.16
 pkgrel=1
 pkgdesc="Cursor App - AI-first coding environment"
 arch=('aarch64')
@@ -11,9 +11,9 @@ license=('custom:Proprietary')  # Replace with the correct license if known
 depends=('fuse2' 'gtk3' 'libxkbfile')
 options=(!strip)
 _appimage="${pkgname}-${pkgver}.AppImage"
-source_aarch64=("${_appimage}::https://downloads.cursor.com/production/5702c9cfca656d8710fad58402fe37f14345e3ac/linux/arm64/Cursor-3.7.42-aarch64.AppImage" "cursor.svg" "${pkgname}.desktop.in" "${pkgname}.sh")
+source_aarch64=("${_appimage}::https://downloads.cursor.com/production/042b3c1a4c53f2c3808067f519fbfc67b72cad8b/linux/arm64/Cursor-3.9.16-aarch64.AppImage" "cursor.svg" "${pkgname}.desktop.in" "${pkgname}.sh")
 noextract=("${_appimage}")
-sha512sums_aarch64=('1244e72160d15959be1834757bab3aea5719cb4afb7c813a546d388d54fe1174ff8be71bb0b68e7154ef089d410fff3bc68037cec4f05a977679b5bf056d58ec'
+sha512sums_aarch64=('a101553797c62d6ae0b44ef2184e4332f2f54e1af31a0ff6dab77540e4127b7e38fa0f07bc9a89d2525f930ec4edb8783bf82ec9550f9a780823812953da5a02'
                    'e6218ecf49af620c97e81da75f4d685248a0fa149a5202c67f269e01b641cdf9831a57bbe3160b8a61a9421940dab79542f1e6f1959f9b504c7b78e644fd7aba'
                    '813d42d46f2e6aad72a599c93aeb0b11a668ad37b3ba94ab88deec927b79c34edf8d927e7bb2140f9147b086562736c3f708242183130824dd74b7a84ece67aa'
                    'ec3fa93a7df3ac97720d57e684f8745e3e34f39d9976163ea0001147961ca4caeb369de9d1e80c877bb417a0f1afa49547d154dde153be7fe6615092894cff47')
