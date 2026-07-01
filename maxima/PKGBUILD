@@ -6,7 +6,7 @@
 pkgbase=maxima
 pkgname=($pkgbase{,-sbcl,-ecl,-fas})
 pkgver=5.49.0
-_sbclver=2.6.5
+_sbclver=2.6.6
 _eclver=26.5.5
 pkgrel=12
 pkgdesc='A sophisticated computer algebra system'
