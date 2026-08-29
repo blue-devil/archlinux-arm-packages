@@ -5,12 +5,12 @@
 # Contributor: Blue DeviL <bluedevil.SCT at proton dot me>
 
 pkgname=metasploit
-pkgver=6.4.127
+pkgver=6.5.3
 pkgrel=1
 pkgdesc='Advanced open-source platform for developing, testing, and using exploit code'
 url='https://www.metasploit.com/'
-arch=('aarch64')
-license=('BSD')
+arch=('x86_64' 'aarch64')
+license=('BSD-3-Clause')
 depends=(
   'git'
   'inetutils'
@@ -25,8 +25,8 @@ depends=(
 )
 options=('!strip' '!debug' '!emptydirs')
 source=(git+https://github.com/rapid7/metasploit-framework.git#tag=${pkgver})
-sha256sums=('63e16d78921c9bfafb6e1138cb8c15aa18e4ec524d21b1ce011ecc88af0a1c07')
-b2sums=('8bb3fe56e0af22fc47bce75e80b316a010625a756601ecb24af29a845c51b62edc7aa6a59fddb008f05fcdb81304ff2eb9cb4c2f1bc37c2cdaba53f0fd179ab3')
+sha256sums=('179c39efaab8aa09d44847d2f71d158413748a2bef1231b41f629f77d544acc3')
+b2sums=('c90d02be27f9ab0c7c8debbce225f93fb88072d60aeb1ceec0f7736f29e1cd7ecdf84a341de384f4b173c662a3c8f96a3a00f25b70a5fb99455cd3ceb46ee551')
 
 
 prepare() {

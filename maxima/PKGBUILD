@@ -5,10 +5,10 @@
 
 pkgbase=maxima
 pkgname=($pkgbase{,-sbcl,-ecl,-fas})
-pkgver=5.49.0
-_sbclver=2.6.7
+pkgver=5.50.0
+_sbclver=2.6.8
 _eclver=26.5.5
-pkgrel=14
+pkgrel=2
 pkgdesc='A sophisticated computer algebra system'
 arch=('x86_64' 'aarch64')
 license=(GPL-2.0-only)
@@ -22,17 +22,15 @@ makedepends=(ecl
 # needs a rebuild when ecl or sbcl changes version
 options=(!zipman) # don't zip info pages or they won't work inside maxima
 source=(maxima::git://git.code.sf.net/p/maxima/code#tag=$pkgver
-        matrixexp.patch
         maxima-sbcl-gmp.patch
         0001-ECL-Fix-autoconf-options-on-whitespace.patch)
-sha256sums=('0bbc6258d1982b60be2e6c6ed7868f687dee5af00c2d0468e19b36ad90188117'
-            'ef1bc6a15fc982ff8c6aa1800bbbd3284d9e060ca27abf9d8c1266632c0c2619'
+sha256sums=('23bad9ff9ca61a60c588ce2f7156f491b2ebc488425477224a8e116bb2e1a1aa'
             '7e85da0b6672b096d7aefac861573a57323dfe805e08d033781448f7ca6ed856'
             '05f6f82550e03af3927379d71a4e2a762ea523fa0c0ea1021741c7dd51414c32')
 
 
 prepare() {
-  patch -d $pkgname -p1 < matrixexp.patch # fix matrix exponentiation
+  #patch -d $pkgname -p1 < matrixexp.patch # fix matrix exponentiation
   patch -d $pkgname -p1 < maxima-sbcl-gmp.patch # Use GMP arithmetic with sbcl (Void Linux)
   patch -d $pkgname -p1 < 0001-ECL-Fix-autoconf-options-on-whitespace.patch # Handle whitespace in LDFLAGS correctly
   cd $pkgbase
