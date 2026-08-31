@@ -1,0 +1,37 @@
+# Maintainer: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
+
+pkgname=hexwalk
+pkgver=2.2.0
+_tag="v$pkgver"
+pkgrel=1
+pkgdesc="Hex Viewer/Editor/Analyzer compatible with Linux/Windows/MacOS"
+arch=('x86_64' 'aarch64')
+url="https://github.com/gcarmix/HexWalk"
+license=('GPL-3.0-or-later')
+depends=('qt6-base' 'qt6-charts')
+makedepends=('cmake' 'git')
+optdepends=('7zip')
+source=("git+https://github.com/gcarmix/HexWalk.git#tag=$_tag")
+sha256sums=('SKIP')
+
+prepare() {
+  cd "$srcdir/HexWalk"
+  git submodule update --init --recursive
+}
+
+build() {
+  cd "$srcdir/HexWalk"
+
+  cmake -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr
+
+  cmake --build build
+}
+
+package() {
+  cd "$srcdir/HexWalk"
+  DESTDIR="$pkgdir" cmake --install build
+}
+
+# vim:set ts=2 sw=2 et:
