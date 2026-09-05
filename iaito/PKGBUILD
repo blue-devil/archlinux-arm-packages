@@ -1,0 +1,59 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
+# Contributor: Santiago Torres-Arias <santiago[at]archlinux[dot]org>
+# Contributor: Aaron McDaniel (mcd1992) <'aur' at the domain 'fgthou.se'>
+# Contributor: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
+
+pkgname=iaito
+pkgver=6.2.0
+pkgrel=1
+pkgdesc='Qt and C++ GUI for radare2 reverse engineering framework'
+arch=('x86_64' 'aarch64')
+url='https://github.com/radareorg/iaito'
+license=(GPL-3.0-only)
+depends=(
+  glibc
+  hicolor-icon-theme
+  libgcc
+  libstdc++
+  qt6-base
+  qt6-svg
+  radare2
+)
+makedepends=(
+  git
+  qt6-tools
+)
+optdepends=('r2ghidra: ghidra decompiler plugin')
+replaces=('r2cutter')
+_iaito_translations_ver=e66b3a962a7fc7dfd730764180011ecffbb206bf
+source=(
+  "git+$url#tag=$pkgver"
+  "git+$url-translations#commit=$_iaito_translations_ver"
+)
+b2sums=('5b1f75fab49955cfbf957b470bc43be13af9b75a4e92d79b2000a763b65a29c6ada6a47bd837818367e320f928ba3950d69b7eeb754afe5ffae519d3a0224264'
+        'dd7a92c5c5874137a270cb60286b31ff0d3202b6422d101802e95faaf7cdd8a69a4ddf959e8cfe12e7bd7f792080eaddca5c8f06eda21ff9966b6d2af6057143')
+
+prepare() {
+  cd $pkgname
+  cp -r ../iaito-translations src/translations
+  sed -e 's|lrelease|/usr/lib/qt6/bin/lrelease|' -i src/translations/Makefile # Fix build with Qt6
+  sed -e 's|"-Wl,-rpath,.*"|""|g' -i src/Iaito.pro
+}
+
+build() {
+  cd $pkgname
+  ./configure --prefix=/usr --with-qmake6
+  mkdir build
+  cd build
+  qmake6 ../src PREFIX=/usr
+  make
+}
+
+package() {
+  cd $pkgname
+  make -C build INSTALL_ROOT="$pkgdir" install
+  make DESTDIR="$pkgdir" PREFIX=/usr install-translations install-man
+}
+
+# vim:set ts=2 sw=2 et:

@@ -1,0 +1,97 @@
+# Maintainer: Levente Polyak <anthraxx[at]archlinux[dot]org>
+# Maintainer: Carl Smedstad <carsme@archlinux.org>
+# Contributor: Guillermo Ramos <0xwille at gmail dot com>
+# Contributor: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
+
+pkgname=radare2
+pkgver=6.2.0
+pkgrel=1
+pkgdesc='Open-source tools to disasm, debug, analyze and manipulate binary files'
+arch=('x86_64' 'aarch64')
+url='https://radare.org'
+license=('GPL-3.0-only AND LGPL-3.0-only')
+depends=(
+  capstone
+  file
+  glibc
+  libgcc
+  libuv
+  libzip
+  lz4
+  sh
+  xxhash
+  zlib
+  zydis
+)
+makedepends=(
+  git
+  meson
+)
+optdepends=('r2ghidra: ghidra decompiler plugin')
+options=('!emptydirs')
+_sdb_ver=2.5.0
+_qjs_ver=9d15fb60b67c45fd0de413bb49e48f8dacebac16
+# The testbins commit is not locked upstream but do it here for
+# reproducibility.
+_testbins_ver=71a65843d445ac412afa7afccace03d55eef4362
+source=(
+  "git+https://github.com/radareorg/radare2.git#tag=$pkgver"
+  "git+https://github.com/radareorg/sdb.git#tag=$_sdb_ver"
+  "qjs::git+https://github.com/quickjs-ng/quickjs.git#commit=$_qjs_ver"
+  "git+https://github.com/radareorg/radare2-testbins.git#commit=$_testbins_ver"
+)
+b2sums=('64dc24d230e4088bbbb7e77a618e61746ef5258007d45f5c5e5cf27cbc1bb34915a83b9c0000d27217348553c0402f11d11cb24906798fdc3df1f90ff8b78ff0'
+        '9db8f00c2b27d16052f7cdc63c5bd2f199aca3d677fab1293ec8c8227bdbc4da1ddb7f1af09ddb70c89af39ffd4af7700d790128650f31986b935fe5fee48977'
+        'bf0111950a6c1d7b5add926649088dcddbfdadd8ce827c0cf31e3dabf79702e7530b38cd868c447947bce41cb0e2c96a1073024d59ad44cdb9ecfc531f0d2610'
+        'f042c23f07188b7ef87b68391188c83d770578ce8422db54c7db48232dc563914c3a1c49bece69a363c2e4f56f76cfb7f64e54eea380d06534bcffe4586fbd17')
+
+prepare() {
+  cd $pkgname
+  for subproject in sdb qjs; do
+    local ver_var=_${subproject//-/_}_ver
+    local expected_ver=${!ver_var}
+    grep -q "revision = $expected_ver" subprojects/$subproject.wrap \
+      || { echo "Version mismatch in subproject $subproject"; exit 1; }
+  done
+
+  cp -a ../radare2-testbins test/bins
+}
+
+build() {
+  cd $pkgname
+  export MESON_PACKAGE_CACHE_DIR="$srcdir"
+  arch-meson build \
+    -D use_sys_capstone=true \
+    -D use_capstone_version=v5 \
+    -D use_sys_magic=true \
+    -D use_sys_zip=true \
+    -D use_sys_zlib=true \
+    -D use_sys_lz4=true \
+    -D use_sys_xxhash=true \
+    -D use_sys_zydis=true \
+    -D use_libuv=true \
+    -D use_webui=true
+  meson compile -C build
+}
+
+check() {
+  cd $pkgname
+  export PATH="$PWD/build/binr/radare2:$PATH"
+  meson test -C build
+}
+
+package() {
+  depends+=(
+    libcapstone.so
+    libmagic.so
+    libzip.so
+  )
+
+  cd $pkgname
+  meson install -C build --destdir "$pkgdir"
+  install -dm755 "$pkgdir/usr/share/doc/$pkgname"
+  cp -va doc/* "$pkgdir/usr/share/doc/$pkgname"
+  ln -vs /usr/share/man/man1/radare2.1.gz "$pkgdir/usr/share/man/man1/r2.1.gz"
+}
+
+# vim:set ts=2 sw=2 et:

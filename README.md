@@ -1,5 +1,3 @@
-
-
 # Arch Linux Arm Packages
 
 ![banner](./assets/banner_archlinux-arm-packages_eng.png)
