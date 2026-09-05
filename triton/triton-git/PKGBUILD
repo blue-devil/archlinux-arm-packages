@@ -1,27 +1,20 @@
-# Maintainer: Alexey Nurmukhametov [nurmukhametov] <echo YWxleEBudXJtdWtoYW1ldG92LnJ1Cg== | base64 -d>
 # Maintainer: Bet4 <0xbet4@gmail.com>
 # Contributor: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 _pkgname=triton
 pkgname=${_pkgname}-git
-pkgver=0.9.r652.gb022f317
+pkgver=0.9.r778.gbc84cf74
 pkgrel=1
 pkgdesc='Dynamic binary analysis framework'
 url='https://triton.quarkslab.com/'
 arch=('x86_64' 'aarch64')
 license=('Apache')
-depends=('boost-libs' 'capstone' 'z3' 'python' 'llvm14' 'kissat' 'bitwuzla')
-makedepends=(
-  'git' 'boost' 'cmake' 'llvm14' 'doxygen'
-)
+depends=('capstone' 'z3' 'python')
+makedepends=('git' 'boost' 'cmake')
 provides=(${_pkgname})
 conflicts=(${_pkgname})
-source=(
-  "$pkgname::git+https://github.com/JonathanSalwan/Triton.git"
-)
+source=("$pkgname::git+https://github.com/JonathanSalwan/Triton.git")
 sha256sums=('SKIP')
-#source=(${_pkgname}-${pkgver}.tar.gz::https://github.com/JonathanSalwan/${_pkgname}/archive/v${pkgver}.tar.gz)
-#sha512sums=('f34cc9787837dc826e21997a86c32087b29ed9662bc8e0ac8ddb934978a64bdfd54c3d1303689be2a9dff4a0f3c9128219e04881e6c98f5e21a27ecd57489586')
 
 pkgver() {
   cd "${srcdir}/${pkgname}"
@@ -29,25 +22,27 @@ pkgver() {
 }
 
 build() {
-  #cd ${_pkgname}-${pkgver}
   cd $pkgname
-  cmake ./ -DCMAKE_INSTALL_PREFIX=/usr \
-    -DLLVM_INTERFACE=ON \
-    -DCMAKE_PREFIX_PATH=$(llvm-config-14 --prefix) \
-    -DBITWUZLA_INTERFACE=ON \
-    #-DPYTHON_EXECUTABLE=/home/$USER/.pyenv/versions/3.11.10/bin/python \
-    #-DPYTHON_LIBRARIES=/home/$USER/.pyenv/versions/3.11.10/lib/libpython3.11.so \
-    #-DPYTHON_INCLUDE_DIRS=/home/$USER/.pyenv/versions/3.11.10/include/python3.11 \
-    #-DBITWUZLA_INCLUDE_DIRS=/usr/include/bitwuzla/
-  make
-  make doc
-  # make python_autocomplete
+
+  # BUILD_EXAMPLES (default ON) pulls in src/examples/cpp, which optionally
+  # builds a "hooking_libc" example against LIEF if find_package(LIEF)
+  # succeeds. The aarch64 `lief` package (0.15.1-1) ships a broken CMake
+  # export (LIEFExport-shared.cmake) that references the "tl::expected"
+  # imported target without ever creating/finding it via
+  # find_dependency(tl-expected), so configure fails with:
+  #   "The link interface of target LIEF::LIEF contains: tl::expected
+  #    but the target was not found."
+  # This is a bug in the system lief/tl-expected packaging, not in Triton.
+  # None of the example binaries are installed by `package()` anyway, so
+  # just disable BUILD_EXAMPLES to skip that broken optional dependency
+  # entirely.
+  cmake ./ -DCMAKE_INSTALL_PREFIX=/usr -DBUILD_EXAMPLES=OFF
+  cmake --build .
 }
 
-package_triton-git() {
-  #cd ${_pkgname}-${pkgver}
+package() {
   cd $pkgname
-  make DESTDIR="$pkgdir" install
+  DESTDIR="$pkgdir" cmake --install .
 }
 
 # vim:set ts=2 sw=2 et:

@@ -1,0 +1,75 @@
+diff -Naur -x utils.cpp Triton-0.9-orig/src/libtriton/arch/x86/x86Specifications.cpp Triton-0.9-patched/src/libtriton/arch/x86/x86Specifications.cpp
+--- Triton-0.9-orig/src/libtriton/arch/x86/x86Specifications.cpp	2022-02-08 12:46:22.000000000 +0300
++++ Triton-0.9-patched/src/libtriton/arch/x86/x86Specifications.cpp	2026-09-05 23:51:46.822676760 +0300
+@@ -153,9 +153,6 @@
+             tritonId = triton::arch::x86::ID_INS_FIADD;
+             break;
+ 
+-          case triton::extlibs::capstone::X86_INS_FADDP:
+-            tritonId = triton::arch::x86::ID_INS_FADDP;
+-            break;
+ 
+           case triton::extlibs::capstone::X86_INS_ADOX:
+             tritonId = triton::arch::x86::ID_INS_ADOX;
+@@ -2877,9 +2874,6 @@
+             tritonId = triton::arch::x86::ID_INS_FUCOM;
+             break;
+ 
+-          case triton::extlibs::capstone::X86_INS_UD2B:
+-            tritonId = triton::arch::x86::ID_INS_UD2B;
+-            break;
+ 
+           case triton::extlibs::capstone::X86_INS_UNPCKHPD:
+             tritonId = triton::arch::x86::ID_INS_UNPCKHPD;
+@@ -3037,17 +3031,11 @@
+             tritonId = triton::arch::x86::ID_INS_VCVTDQ2PS;
+             break;
+ 
+-          case triton::extlibs::capstone::X86_INS_VCVTPD2DQX:
+-            tritonId = triton::arch::x86::ID_INS_VCVTPD2DQX;
+-            break;
+ 
+           case triton::extlibs::capstone::X86_INS_VCVTPD2DQ:
+             tritonId = triton::arch::x86::ID_INS_VCVTPD2DQ;
+             break;
+ 
+-          case triton::extlibs::capstone::X86_INS_VCVTPD2PSX:
+-            tritonId = triton::arch::x86::ID_INS_VCVTPD2PSX;
+-            break;
+ 
+           case triton::extlibs::capstone::X86_INS_VCVTPD2PS:
+             tritonId = triton::arch::x86::ID_INS_VCVTPD2PS;
+@@ -3093,9 +3081,6 @@
+             tritonId = triton::arch::x86::ID_INS_VCVTSS2USI;
+             break;
+ 
+-          case triton::extlibs::capstone::X86_INS_VCVTTPD2DQX:
+-            tritonId = triton::arch::x86::ID_INS_VCVTTPD2DQX;
+-            break;
+ 
+           case triton::extlibs::capstone::X86_INS_VCVTTPD2DQ:
+             tritonId = triton::arch::x86::ID_INS_VCVTTPD2DQ;
+diff -Naur -x utils.cpp Triton-0.9-orig/src/libtriton/includes/triton/modesEnums.hpp Triton-0.9-patched/src/libtriton/includes/triton/modesEnums.hpp
+--- Triton-0.9-orig/src/libtriton/includes/triton/modesEnums.hpp	2022-02-08 12:46:22.000000000 +0300
++++ Triton-0.9-patched/src/libtriton/includes/triton/modesEnums.hpp	2026-09-05 23:51:46.823756642 +0300
+@@ -8,6 +8,8 @@
+ #ifndef TRITON_MODES_HPP
+ #define TRITON_MODES_HPP
+ 
++#include <cstdint>
++
+ 
+ 
+ //! The Triton namespace
+diff -Naur -x utils.cpp Triton-0.9-orig/src/libtriton/includes/triton/pythonBindings.hpp Triton-0.9-patched/src/libtriton/includes/triton/pythonBindings.hpp
+--- Triton-0.9-orig/src/libtriton/includes/triton/pythonBindings.hpp	2022-02-08 12:46:22.000000000 +0300
++++ Triton-0.9-patched/src/libtriton/includes/triton/pythonBindings.hpp	2026-09-05 23:51:46.824279062 +0300
+@@ -9,7 +9,7 @@
+ #define TRITONPYTHONBINDINGS_H
+ 
+ #include <Python.h>
+-#include <longintrepr.h>
++#include <cpython/longintrepr.h>
+ #if _WIN32
+   #include <cmath>
+   #define _hypot hypot
