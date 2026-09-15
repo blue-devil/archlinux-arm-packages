@@ -1,7 +1,7 @@
 # Maintainer: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 pkgname=hexwalk
-pkgver=2.2.0
+pkgver=2.2.1
 _tag="v$pkgver"
 pkgrel=1
 pkgdesc="Hex Viewer/Editor/Analyzer compatible with Linux/Windows/MacOS"
