@@ -8,6 +8,12 @@ As of 2024-11-10
 * This package is built with [bitwuzla][04] support
 * Compiled for `Python 3.12`
 
+As of Sept. 2006
+
+* Even though triton people didn't gave a new tag, pull the latest
+  commit and try to build. The latest tag 0.9 is waaaaay too old to build.
+  Wast of time to fix!
+
 ## NOTE TO SELF
 
 Do not make a package for triton or angr, instead use pyenv and install
