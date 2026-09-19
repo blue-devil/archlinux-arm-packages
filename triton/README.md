@@ -12,7 +12,7 @@ As of Sept. 2006
 
 * Even though triton people didn't gave a new tag, pull the latest
   commit and try to build. The latest tag 0.9 is waaaaay too old to build.
-  Wast of time to fix!
+  Waste of time to fix!
 
 ## NOTE TO SELF
 
