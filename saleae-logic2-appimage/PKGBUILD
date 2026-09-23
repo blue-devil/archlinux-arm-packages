@@ -1,0 +1,103 @@
+# Maintainer: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
+
+_pkgname=saleae-logic2
+pkgname="${_pkgname}-appimage"
+pkgver=2.4.47_insider.1
+_pkgver="${pkgver//_/-}"
+pkgrel=1
+pkgdesc="Debug hardware like a pro (insider channel AppImage)"
+arch=('x86_64' 'aarch64')
+url="https://www.saleae.com/"
+license=('LicenseRef-Saleae-Proprietary')
+depends=(
+  'alsa-lib'
+  'at-spi2-core'
+  'cairo'
+  'dbus'
+  'expat'
+  'gcc-libs'
+  'glib2'
+  'glibc'
+  'gtk3'
+  'libcups'
+  'libx11'
+  'libxcb'
+  'libxcomposite'
+  'libxdamage'
+  'libxext'
+  'libxfixes'
+  'libxkbcommon'
+  'libxrandr'
+  'mesa'
+  'nspr'
+  'nss'
+  'pango'
+  'systemd-libs'
+)
+conflicts=('saleae-logic' 'saleae-logic-beta' 'saleae-logic2')
+provides=("saleae-logic2=${pkgver}")
+options=('!strip' '!debug')
+install="${pkgname}.install"
+
+_appimage="${pkgname}-${pkgver}.AppImage"
+_url_base="https://downloads2.saleae.com/logic2/release_channels/insider"
+
+source=("saleae-logic2.desktop" "saleae-logic2.png")
+source_x86_64=("${_appimage}::${_url_base}/Logic-${_pkgver}-linux-x64.AppImage")
+source_aarch64=("${_appimage}::${_url_base}/Logic-${_pkgver}-linux-arm64.AppImage")
+noextract=("${_appimage}")
+
+sha256sums=('5e00addb0efd37a8660d0b5a34bf2ec861d871e6ac42eb04957448657951c88a'
+            'b88b00ced0ca48aff9e1b2b4b22f6685f79c311f4efcdcabb7e6c358af508d11')
+sha256sums_x86_64=('59cc9c1dc43776d28d5f97b483b5293e996b0529b6047d1c11d19a40b0b5e337')
+sha256sums_aarch64=('b94263bf642ee5ed4b4fd3c9c5094c36a320fdb4cba4a2c5a0d477b84539c8be')
+
+build() {
+  cd "${srcdir}"
+
+  chmod u+x "${_appimage}"
+  rm -rf squashfs-root
+  "./${_appimage}" --appimage-extract > /dev/null
+}
+
+package() {
+  cd "${srcdir}/squashfs-root"
+
+  # The AppImage payload already uses an /usr layout.
+  cp -a usr "${pkgdir}/usr"
+
+  # AppImage entry point and the .desktop are replaced.
+  rm -f "${pkgdir}/usr/bin/Logic"
+
+  # Only the x86_64 build ships LogicIcon.png; I install a new copy for
+  # both architectures, so drop the bundled one to avoid duplicating it.
+  rm -f "${pkgdir}"/usr/lib/logic/resources/linux-*/LogicIcon.png
+
+  find "${pkgdir}/usr" -type d -exec chmod 755 {} +
+  find "${pkgdir}/usr" -type f -perm /111 -exec chmod 755 {} +
+  find "${pkgdir}/usr" -type f ! -perm /111 -exec chmod 644 {} +
+
+  # Chromium's setuid sandbox helper.
+  chmod 4755 "${pkgdir}/usr/lib/logic/chrome-sandbox"
+
+  install -dm755 "${pkgdir}/usr/bin"
+  ln -s /usr/lib/logic/Logic "${pkgdir}/usr/bin/saleae-logic2"
+
+  install -Dm644 "${srcdir}/saleae-logic2.desktop" \
+    "${pkgdir}/usr/share/applications/${pkgname}.desktop"
+  # 512x512 is the largest size hicolor's index.theme declares; anything bigger
+  # is not indexed, so icon lookup by name would silently fail.
+  install -Dm644 "${srcdir}/saleae-logic2.png" \
+    "${pkgdir}/usr/share/icons/hicolor/512x512/apps/saleae-logic2.png"
+
+  # Non-root access to the Saleae analyzers. Logic 2 hardcodes this directory
+  # and refuses to record until it finds the file here, so /usr/lib/udev is not
+  # an option; the .install scriptlet reloads the rules instead of the hook.
+  install -Dm644 "${pkgdir}/usr/lib/logic/resources/udev/99-SaleaeLogic.rules" \
+    "${pkgdir}/etc/udev/rules.d/99-SaleaeLogic.rules"
+
+  install -Dm644 "${pkgdir}/usr/lib/logic/LICENSE" \
+    "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
+
+# vim: ts=2 sw=2 et:

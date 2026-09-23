@@ -1,0 +1,24 @@
+_reload_udev() {
+  # Logic 2 hardcodes /etc/udev/rules.d as the directory it checks, and pacman's
+  # systemd hook only watches /usr/lib/udev/rules.d, so the reload is done here.
+  if command -v udevadm > /dev/null 2>&1; then
+    udevadm control --reload-rules > /dev/null 2>&1 || true
+    udevadm trigger --subsystem-match=usb --action=add > /dev/null 2>&1 || true
+  fi
+}
+
+post_install() {
+  _reload_udev
+  cat <<'EOF'
+==> Saleae analyzers already plugged in may need to be reconnected before
+    Logic 2 can access them without root.
+EOF
+}
+
+post_upgrade() {
+  _reload_udev
+}
+
+post_remove() {
+  _reload_udev
+}

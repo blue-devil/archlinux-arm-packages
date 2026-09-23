@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Logic 2
+GenericName=Logic Analyzer
+Comment=Debug hardware like a pro
+Exec=saleae-logic2 %U
+Icon=saleae-logic2
+Terminal=false
+Categories=Development;Electronics;Engineering;
+Keywords=saleae;logic;analyzer;oscilloscope;debug;
+StartupWMClass=Logic
