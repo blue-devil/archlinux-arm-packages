@@ -343,3 +343,14 @@ dkms.conf
 #
 # VSCode gitignore end
 #
+#
+# makepkg gitignore start
+#
+pkg/
+src/
+*.pkg.tar.*
+*.src.tar.*
+*.AppImage
+#
+# makepkg gitignore end
+#
