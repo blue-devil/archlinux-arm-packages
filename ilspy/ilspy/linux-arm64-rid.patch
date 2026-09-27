@@ -1,0 +1,30 @@
+Add linux-arm64 to the RuntimeIdentifiers of the two projects that are
+published RID-specifically (the desktop app and the ReadyToRun plugin).
+Upstream v11.1 only publishes linux-x64 on Linux; nothing in the dependency
+graph is x64-specific (SkiaSharp / HarfBuzzSharp native assets and the .NET
+runtime pack all ship linux-arm64 binaries), so declaring the RID is all
+that is needed for `dotnet publish -r linux-arm64` to restore per-RID assets.
+Hunk bodies intentionally keep the upstream CRLF line endings.
+
+--- a/ILSpy/ILSpy.csproj	2026-09-27 01:19:03.163051953 +0300
++++ b/ILSpy/ILSpy.csproj	2026-09-27 01:19:03.165424495 +0300
+@@ -5,7 +5,7 @@
+     <!-- RIDs we publish the app for. Declared here (not solution-wide) so the lock
+          file stays in sync for these targets without forcing per-RID restore onto
+          the ILSpyCmd tool (PackAsTool + GeneratePackageOnBuild) or the test projects. -->
+-    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;osx-arm64</RuntimeIdentifiers>
++    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-arm64</RuntimeIdentifiers>
+     <!-- Framework-dependent publishes target net10.0; roll forward to a newer major runtime when
+          the exact one isn't installed so the app still starts on machines that only have a later
+          .NET. -->
+--- a/ILSpy.ReadyToRun/ILSpy.ReadyToRun.csproj	2026-09-27 01:19:03.163603162 +0300
++++ b/ILSpy.ReadyToRun/ILSpy.ReadyToRun.csproj	2026-09-27 01:19:03.165476912 +0300
+@@ -8,7 +8,7 @@
+          without restoring again), so the per-RID targets must already be in the restored assets.
+          Mirror ILSpy.csproj's RuntimeIdentifiers so the plugin can ship on every platform the host
+          supports, not just the Windows ones publish.ps1 currently exercises. -->
+-    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;osx-arm64</RuntimeIdentifiers>
++    <RuntimeIdentifiers>win-x64;win-arm64;linux-x64;linux-arm64;osx-arm64</RuntimeIdentifiers>
+     <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+     <NeutralResourcesLanguage>en-US</NeutralResourcesLanguage>
+     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>

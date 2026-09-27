@@ -1,0 +1,39 @@
+pkgbase = ilspy
+	pkgdesc = .NET assembly browser and decompiler (Avalonia desktop UI, self-contained)
+	pkgver = 11.1.0.9782
+	pkgrel = 1
+	url = https://github.com/icsharpcode/ILSpy
+	arch = aarch64
+	arch = x86_64
+	license = MIT
+	makedepends = git
+	makedepends = dotnet-sdk>=11.0
+	makedepends = powershell
+	depends = glibc
+	depends = gcc-libs
+	depends = fontconfig
+	depends = icu
+	depends = openssl
+	depends = krb5
+	depends = libx11
+	depends = libxext
+	depends = libxrandr
+	depends = libxi
+	depends = libxcursor
+	depends = libxfixes
+	depends = libsm
+	depends = libice
+	depends = xdg-utils
+	depends = hicolor-icon-theme
+	optdepends = libglvnd: hardware-accelerated (OpenGL) rendering
+	optdepends = gtk3: GTK-based dialogs/tray fallback when no portal is available
+	optdepends = lttng-ust2.12: CoreCLR tracing
+	conflicts = ilspy-git
+	options = !strip
+	options = !debug
+	source = git+https://github.com/icsharpcode/ILSpy.git#tag=v11.1
+	source = linux-arm64-rid.patch
+	sha512sums = SKIP
+	sha512sums = f3e8af75a6c4d3250f7e716520742e8c8d6b8240521242edeb9025ae7126ba8f45e0499934ff20085a05e817e914a4d94f618d2d77964d73a6201859484b0b94
+
+pkgname = ilspy

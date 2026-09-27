@@ -1,0 +1,94 @@
+# Maintainer: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
+
+pkgname=ilspy
+pkgver=11.1.0.9782
+_tag=v11.1
+pkgrel=1
+pkgdesc=".NET assembly browser and decompiler (Avalonia desktop UI, self-contained)"
+arch=('aarch64' 'x86_64')
+url="https://github.com/icsharpcode/ILSpy"
+license=('MIT')
+depends=('glibc' 'gcc-libs' 'fontconfig' 'icu' 'openssl' 'krb5'
+         'libx11' 'libxext' 'libxrandr' 'libxi' 'libxcursor' 'libxfixes' 'libsm' 'libice'
+         'xdg-utils' 'hicolor-icon-theme')
+optdepends=('libglvnd: hardware-accelerated (OpenGL) rendering'
+            'gtk3: GTK-based dialogs/tray fallback when no portal is available'
+            'lttng-ust2.12: CoreCLR tracing')
+makedepends=('git' 'dotnet-sdk>=11.0' 'powershell')
+conflicts=('ilspy-git')
+options=('!strip' '!debug')
+source=("git+${url}.git#tag=${_tag}"
+        'linux-arm64-rid.patch')
+sha512sums=('SKIP'
+            'f3e8af75a6c4d3250f7e716520742e8c8d6b8240521242edeb9025ae7126ba8f45e0499934ff20085a05e817e914a4d94f618d2d77964d73a6201859484b0b94')
+
+_rid() {
+  case "$CARCH" in
+    aarch64) echo linux-arm64 ;;
+    x86_64)  echo linux-x64 ;;
+    *) error "unsupported CARCH: $CARCH"; return 1 ;;
+  esac
+}
+
+prepare() {
+  cd ILSpy
+  patch -Np1 -i "$srcdir/linux-arm64-rid.patch"
+}
+
+build() {
+  cd ILSpy
+  local rid
+  rid="$(_rid)"
+
+  export DOTNET_CLI_TELEMETRY_OPTOUT=1
+  export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+  export DOTNET_NOLOGO=1
+  export DOTNET_CLI_HOME="$srcdir/dotnet-home"
+  export NUGET_PACKAGES="${NUGET_PACKAGES:-$srcdir/nuget}"
+  export DOTNET_CLI_USE_MSBUILD_SERVER=false
+  export MSBUILDDISABLENODEREUSE=1
+  export OPENSSL_ENABLE_SHA1_SIGNATURES=1
+  export BUILD_SOURCEBRANCHNAME=master
+
+  local args=(
+    -c Release
+    -r "$rid"
+    --self-contained
+    -o "$srcdir/publish"
+    -p:RestoreEnablePackagePruning=false
+    -p:RestoreLockedMode=false
+    -p:DebugType=none
+    -p:DebugSymbols=false
+  )
+
+  dotnet publish ILSpy/ILSpy.csproj "${args[@]}"
+  dotnet publish ILSpy.ReadyToRun/ILSpy.ReadyToRun.csproj "${args[@]}"
+
+  dotnet build-server shutdown >/dev/null 2>&1 || true
+}
+
+package() {
+  # ----- application payload -----
+  install -d "$pkgdir/opt/$pkgname" "$pkgdir/usr/bin"
+  cp -a "$srcdir/publish/." "$pkgdir/opt/$pkgname/"
+  find "$pkgdir/opt/$pkgname" -name '*.pdb' -delete
+  find "$pkgdir/opt/$pkgname" -type d -exec chmod 755 {} +
+  find "$pkgdir/opt/$pkgname" -type f -exec chmod 644 {} +
+  chmod 755 "$pkgdir/opt/$pkgname/ILSpy"
+  [[ -f "$pkgdir/opt/$pkgname/createdump" ]] && chmod 755 "$pkgdir/opt/$pkgname/createdump"
+  ln -s "/opt/$pkgname/ILSpy" "$pkgdir/usr/bin/ilspy"
+
+  # ----- desktop integration -----
+  cd ILSpy
+  install -Dm644 BuildTools/packaging/linux/ilspy.desktop \
+    "$pkgdir/usr/share/applications/ilspy.desktop"
+  install -Dm644 BuildTools/packaging/linux/ilspy.png \
+    "$pkgdir/usr/share/icons/hicolor/256x256/apps/ilspy.png"
+
+  # ----- licenses -----
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 doc/third-party-notices.txt \
+    "$pkgdir/usr/share/licenses/$pkgname/third-party-notices.txt"
+}
+
+# vim: ts=2 sw=2 et:
