@@ -1,0 +1,153 @@
+# Maintainer: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
+# Contributor: grufo <madmurphy333 AT gmail DOT com>
+# Contributor: Sebastian Jug <seb AT stianj DOT ug>
+
+# The ARM64 Linux builds published by ooovlad are cross-compiled with Mozilla/Tor's
+# official tor-browser-build (RBM) on an x86_64 host, via the upstream
+# 'browser-linux-aarch64' target. The builder applies no patches to Tor Browser.
+#
+# Those release assets are NOT signed, so the sha256 below is the only integrity
+# control. To bump the version, update pkgver and sha256sums together:
+#   makepkg -g tor-browser-unofficial-port-bin/PKGBUILD
+#
+# Provenance of 15.0.24: built from tag tbb-15.0.24-build1 of tor-browser-build,
+# as the shipped platform.ini reports Milestone=140.17.0, which matches
+# firefox_platform_version in projects/firefox/config at that tag.
+
+pkgname=tor-browser-unofficial-port-bin
+_pkgname=tor-browser-unofficial-port
+_optdir="/opt/${_pkgname}"
+pkgver=15.0.24
+pkgrel=1
+pkgdesc='Unofficial ARM64 build of Tor Browser, the anonymous browser from the Tor Project'
+arch=('aarch64')
+url='https://github.com/ooovlad/tor-mullvad-aarch64'
+license=('MPL-2.0')
+
+# Derived from DT_NEEDED of the bundled ELF objects. gtk3 covers the X11/Wayland
+# stack transitively, so only the libraries it does not pull in are listed here.
+depends=('alsa-lib'
+         'dbus'
+         'glycin'
+         'gtk3'
+         'hicolor-icon-theme'
+         'json-glib'
+         'libcloudproviders'
+         'libseccomp'
+         'mime-types'
+         'systemd-libs'
+         'tinysparql'
+         'ttf-font')
+optdepends=('ffmpeg: H.264 video'
+            'hunspell-en_US: spell checking, American English'
+            'libnotify: notification integration'
+            'libpulse: PulseAudio audio output'
+            'networkmanager: location detection via WiFi networks'
+            'speech-dispatcher: text-to-speech'
+            'xdg-desktop-portal: screensharing on Wayland')
+provides=("${_pkgname}")
+conflicts=('tor-browser')
+options=('!strip' '!debug')
+
+source=("https://github.com/ooovlad/tor-mullvad-aarch64/releases/download/${pkgver}/tor-browser-linux-aarch64-${pkgver}.tar.xz"
+        "${_pkgname}.sh"
+        "${_pkgname}.desktop")
+sha256sums=('66ee4b45f3b4c591c8602b4efdc59218e429c80bc2620364643c18c55e86461e'
+            'SKIP'
+            'SKIP')
+
+check() {
+  local _browserdir="${srcdir}/tor-browser/Browser"
+  local _libdir="${_browserdir}/TorBrowser/Tor"
+  local -a _elfs=('libxul.so'
+                  'firefox.real'
+                  'TorBrowser/Tor/tor'
+                  'TorBrowser/Tor/PluggableTransports/conjure-client'
+                  'TorBrowser/Tor/PluggableTransports/lyrebird')
+  local _elf _machine _missing _lib
+
+  for _elf in "${_elfs[@]}"; do
+    if [[ ! -f "${_browserdir}/${_elf}" ]]; then
+      error "unexpected layout: ${_elf} is missing from the archive"
+      return 1
+    fi
+  done
+
+  # The bundle ships no RPATH, so an x86_64 object can only reach this point if
+  # the upstream release lost its cross build.
+  if command -v readelf > /dev/null; then
+    for _elf in "${_elfs[@]}"; do
+      _machine=$(readelf -h "${_browserdir}/${_elf}" |
+        sed -n 's/^[[:space:]]*Machine:[[:space:]]*//p')
+      if [[ "${_machine}" != *AArch64* ]]; then
+        error "${_elf} is not an AArch64 binary: ${_machine}"
+        return 1
+      fi
+    done
+  else
+    warning 'readelf not available, skipping the architecture check'
+  fi
+
+  # tor links against the OpenSSL and libevent copies shipped in its own
+  # directory, but neither they nor tor carry an RPATH. Left to the loader the
+  # host libraries win and tor aborts on an undefined evutil_secure_rng_add_bytes,
+  # so both halves of the workaround have to keep holding: the bundle ships those
+  # libraries, and the launcher puts that directory on the library path.
+  for _lib in libevent-2.1.so.7 libssl.so.3 libcrypto.so.3; do
+    if [[ ! -e "${_libdir}/${_lib}" ]]; then
+      error "the bundle no longer ships ${_lib} next to tor"
+      return 1
+    fi
+  done
+  if ! grep -q 'LD_LIBRARY_PATH=' "${srcdir}/${_pkgname}.sh"; then
+    error "${_pkgname}.sh does not set LD_LIBRARY_PATH, tor will fail to start"
+    return 1
+  fi
+
+  # ldd(8) does not know that the bundle resolves its libraries relative to the
+  # browser directory, so point it there: a remaining "not found" entry then means
+  # a library this package really fails to provide. The bundled libstdc++ is
+  # deliberately left out: upstream only falls back to it when abicheck finds the
+  # system one older, and prepending it here would shadow the host libstdc++ and
+  # break libicuuc.
+  for _elf in 'libxul.so' 'TorBrowser/Tor/tor'; do
+    _missing=$(LD_LIBRARY_PATH="${_browserdir}:${_libdir}" \
+      ldd "${_browserdir}/${_elf}" 2> /dev/null |
+      grep 'not found' | awk '{print $1}')
+    if [[ -n "${_missing}" ]]; then
+      error "${_elf} cannot resolve: ${_missing}"
+      error 'the packages providing them are missing from depends='
+      return 1
+    fi
+  done
+}
+
+package() {
+  local _browserdir="tor-browser/Browser"
+  local _size
+
+  install -dm0755 "${pkgdir}${_optdir}"
+
+  # The contents of the bundle's Browser directory become the install root, so
+  # that start-tor-browser ends up next to is-packaged-app as it expects.
+  cp -a "${_browserdir}/." "${pkgdir}${_optdir}/"
+
+  # Tells the bundle to store profiles in ~/.tor-browser instead of inside /opt.
+  touch "${pkgdir}${_optdir}/is-packaged-app"
+
+  # The release archive ships every entry as mode 0700.
+  chmod -R u=rwX,go=rX "${pkgdir}${_optdir}"
+
+  install -Dm0755 "${srcdir}/${_pkgname}.sh" "${pkgdir}/usr/bin/${_pkgname}"
+  install -Dm0644 "${srcdir}/${_pkgname}.desktop" \
+    "${pkgdir}/usr/share/applications/${_pkgname}.desktop"
+
+  for _size in 16 32 48 64 128; do
+    install -Dm0644 "${pkgdir}${_optdir}/browser/chrome/icons/default/default${_size}.png" \
+      "${pkgdir}/usr/share/icons/hicolor/${_size}x${_size}/apps/${_pkgname}.png"
+  done
+  install -Dm0644 "${pkgdir}${_optdir}/browser/chrome/icons/default/about-logo.svg" \
+    "${pkgdir}/usr/share/icons/hicolor/scalable/apps/${_pkgname}.svg"
+}
+
+# vim: ts=2 sw=2 et:

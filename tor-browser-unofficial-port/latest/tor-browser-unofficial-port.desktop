@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Tor Browser
+GenericName=Web Browser
+Comment=Tor Browser is a privacy-focused web browser designed to minimize tracking and fingerprinting, using the Tor network to protect your privacy and anonymity.
+Categories=Network;WebBrowser;Security;
+Exec=/usr/bin/tor-browser-unofficial-port %u
+Icon=tor-browser-unofficial-port
+Terminal=false
+StartupNotify=true
+StartupWMClass=Tor Browser

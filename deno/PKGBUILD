@@ -3,9 +3,9 @@
 # Contributor: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 pkgname=deno
-pkgver=2.9.4
+pkgver=2.9.7
 pkgrel=1
-_rusty_v8_ver=150.2.0
+_rusty_v8_ver=150.4.0
 pkgdesc="A secure runtime for JavaScript and TypeScript"
 arch=('x86_64' 'aarch64')
 url="https://deno.com"
@@ -14,10 +14,12 @@ depends=('dbus' 'lcms2' 'libffi' 'libgcc' 'sqlite' 'wayland' 'zlib' 'zstd')
 makedepends=('git' 'python' 'rust' 'rust-bindgen' 'nodejs' 'gn' 'ninja' 'clang' 'lld' 'cmake' 'protobuf')
 source=("git+https://github.com/denoland/deno.git#tag=v$pkgver"
         "git+https://github.com/denoland/rusty_v8.git#tag=v$_rusty_v8_ver"
-        "compiler-rt-adjust-paths.patch")
-sha512sums=('682de23c3ee484f4007bf215f33c02dd31482ccfeb2a00f9e5e52cb47106d677d9d9a3bda22563beb5bf4756d35ce01c18fef612f8e8bccf807adb73f8e757fe'
-            'dbba330fc420df323bc21bf210def38c26e5f4269148916ee1e8d0c1b1242a1d7f597a40aab594cfaccc4b24e8eac7c6ef37e7242465c1a1fb2f07cd22e10dde'
-            '8a782d68a6140f739f00d3eb341d742584ee0be80e85e89bc1540a21d15ad8b75274672ebd02e1e4fd1925ed9ca68b05142388e795dff81b0a864d38f5514253')
+        "compiler-rt-adjust-paths.patch"
+        "deno-2.9.6-rust-system.patch")
+sha512sums=('ef295c7d65c21aeccc8527fdbf3d0d0d2fcdcc833dd548f353ea6658214c17674ece711c4410c27aa1d85f851ffbe63c81056e9d388f866cacd9718f7031f6ff'
+            'ae0d6d585cf7ba0172930d09e3d7a2d4bb5d748409e86b44dfa5a12741a51aab138ab12ca8327ac6a36506b9caf6a20fed20f0efd5b7fdf145bd8fdca20f5ed0'
+            '8a782d68a6140f739f00d3eb341d742584ee0be80e85e89bc1540a21d15ad8b75274672ebd02e1e4fd1925ed9ca68b05142388e795dff81b0a864d38f5514253'
+            '658e32634fc7463f79099d19e2e54ef59318811209d1e5f7adf5caae9b57ad06dfe9bbe41d272c47d92cd0ad1c746cc0e04775c495c8e120cbd62c88239d1945')
 
 prepare() {
   cd rusty_v8
@@ -27,7 +29,9 @@ prepare() {
   git submodule update --init --recursive --force
   git submodule foreach --recursive 'git checkout -f && git clean -fd'
 
+  # Use system-provided Rust toolchain for V8 build
   sed -i '/download_rust_toolchain();/d' build.rs
+  patch -Np1 -i ../deno-2.9.6-rust-system.patch
 
   # Drop flags rejected by the clang++ invoked in our build environment.
   sed -i \
@@ -41,8 +45,11 @@ prepare() {
 
   cd ../deno
   echo -e "\n[patch.crates-io]\nv8 = { path = '../rusty_v8' }" >> Cargo.toml
+  # Keep the V8 backend while disabling Deno's self-upgrade and vendored zlib-ng.
+  # Since 2.9.5 both live in __runtime_defaults, a feature the v8 list pulls in, so
+  # drop it from there instead of deleting the definition and orphaning the reference.
   sed -i \
-    -e '/default = \["upgrade", "__vendored_zlib_ng"\]/d' \
+    -e '/^v8 = \[/s/"__runtime_defaults", //' \
     -e '/^keyring =/s/, "vendored"//' \
     cli/Cargo.toml
 
@@ -57,7 +64,7 @@ build() {
   export CXXFLAGS="${CXXFLAGS/_FORTIFY_SOURCE=3/_FORTIFY_SOURCE=2}"
 
   local _clang_version=$(clang -dumpversion | cut -d '.' -f 1)
-  local _rustc_version=$(rustc --version)
+  local _rustc_version=$(rustc --version | awk '{ print $2 ;}')
   local _extra_gn_args=(
     'custom_toolchain="//build/toolchain/linux/unbundle:default"'
     'host_toolchain="//build/toolchain/linux/unbundle:default"'
@@ -65,8 +72,8 @@ build() {
     'rust_sysroot_absolute="/usr"'
     'rust_bindgen_root="/usr"'
     "rustc_version=\"$_rustc_version\""
+    'use_sysroot=false'
     'use_system_libffi=true'
-    'v8_enable_temporal_support=false'
   )
 
   export CC=clang CXX=clang++ AR=/usr/bin/ar NM=nm
@@ -80,6 +87,7 @@ build() {
   export LIBSQLITE3_SYS_USE_PKG_CONFIG=1
   export ZSTD_SYS_USE_PKG_CONFIG=1
   export CARGO_FEATURE_SYSTEM=1 # Use system-provided libffi
+  export RUSTC_BOOTSTRAP=1
 
   # deno's [profile.release] sets `lto = true` (fat LTO) + `codegen-units = 1`.
   # Fat LTO merges every rlib in the dependency graph into one LLVM module in a
