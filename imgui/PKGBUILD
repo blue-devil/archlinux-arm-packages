@@ -2,7 +2,7 @@
 
 pkgname=imgui
 pkgver=1.92.9
-pkgrel=1
+pkgrel=2
 pkgdesc="Bloat-free immediate mode GUI for C++ with GLFW, SDL2, SDL3, OpenGL 2 and OpenGL 3 backends as static libraries"
 arch=('x86_64' 'aarch64')
 url="https://github.com/ocornut/imgui"
@@ -10,8 +10,12 @@ license=('MIT')
 depends=('glfw' 'libglvnd' 'sdl2' 'sdl3')
 makedepends=('gcc' 'pkgconf')
 options=('staticlibs')
-source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('af97ed649182c39314320514a672b82008ab462b9293fe23d37b30bfa5d05519')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz"
+        imgui.pc.in
+        imgui_impl.pc.in)
+sha256sums=('af97ed649182c39314320514a672b82008ab462b9293fe23d37b30bfa5d05519'
+            '17daeecede8d362444748277b079a03c5f405a2fce7e9a85ebf8130d9551dd67'
+            '0085a0ed16e5b98a6b23f897bc1bf4ca41b58dc3d6b223a1ee95e2b2597daf6d')
 
 _core=(imgui.cpp imgui_demo.cpp imgui_draw.cpp imgui_tables.cpp imgui_widgets.cpp misc/cpp/imgui_stdlib.cpp)
 _backends=(opengl2 opengl3 glfw sdl2 sdlrenderer2 sdl3 sdlrenderer3)
@@ -54,35 +58,15 @@ package() {
   install -m644 backends/imgui_impl_opengl3_loader.h "$_inc/backends/"
   install -m644 "$srcdir"/out/*.a "$pkgdir/usr/lib/"
 
-  cat > "$pkgdir/usr/lib/pkgconfig/imgui.pc" <<EOF
-prefix=/usr
-libdir=\${prefix}/lib
-includedir=\${prefix}/include
-
-Name: imgui
-Description: Dear ImGui, immediate mode GUI for C++ (core, static)
-Version: $pkgver
-Cflags: -I\${includedir}/imgui -I\${includedir}/imgui/backends
-Libs: -L\${libdir} -limgui
-EOF
+  sed "s|@PKGVER@|$pkgver|g" "$srcdir/imgui.pc.in" > "$pkgdir/usr/lib/pkgconfig/imgui.pc"
   for _b in "${_backends[@]}"; do
     case $_b in
       opengl2) _req="imgui gl" _libs="-limgui_impl_opengl2" ;;
       opengl3) _req="imgui" _libs="-limgui_impl_opengl3 -ldl" ;;
       *) _req="imgui $(_backend_pc "$_b")" _libs="-limgui_impl_$_b" ;;
     esac
-    cat > "$pkgdir/usr/lib/pkgconfig/imgui_impl_$_b.pc" <<EOF
-prefix=/usr
-libdir=\${prefix}/lib
-includedir=\${prefix}/include
-
-Name: imgui_impl_$_b
-Description: Dear ImGui $_b backend (static)
-Version: $pkgver
-Requires: $_req
-Cflags: -I\${includedir}/imgui/backends
-Libs: -L\${libdir} $_libs
-EOF
+    sed "s|@PKGVER@|$pkgver|g;s|@BACKEND@|$_b|g;s|@REQUIRES@|$_req|g;s|@LIBS@|$_libs|g" \
+      "$srcdir/imgui_impl.pc.in" > "$pkgdir/usr/lib/pkgconfig/imgui_impl_$_b.pc"
   done
   install -Dm644 LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/LICENSE.txt"
 }

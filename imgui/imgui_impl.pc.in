@@ -1,0 +1,10 @@
+prefix=/usr
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: imgui_impl_@BACKEND@
+Description: Dear ImGui @BACKEND@ backend (static)
+Version: @PKGVER@
+Requires: @REQUIRES@
+Cflags: -I${includedir}/imgui/backends
+Libs: -L${libdir} @LIBS@

@@ -8,3 +8,10 @@
 - `provides=raylib` / `conflicts=raylib`: remove the official package first
   (`pacman -Rdd raylib`), then install this one.
 - Still disabled upstream: TGA, PSD.
+
+## Why I Renamed it to raylin-jpg
+
+Real Answer: to avoid automatic updates from official repo's raylib.  
+Bonus Answer: I can switch to official repo's package just by installing it
+but this time, they conflicts. So that I rememeber that I need to uninstall
+this one.

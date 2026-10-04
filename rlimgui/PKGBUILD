@@ -3,7 +3,7 @@
 pkgname=rlimgui
 pkgver=6.0
 _tag=Raylib_6_0
-pkgrel=2
+pkgrel=3
 pkgdesc="Dear ImGui backend for raylib, as a static library"
 arch=('x86_64' 'aarch64')
 url="https://github.com/raylib-extras/rlImGui"
@@ -12,9 +12,11 @@ depends=('imgui' 'raylib')
 makedepends=('gcc' 'pkgconf')
 options=('staticlibs')
 source=("rlImGui-$_tag.tar.gz::$url/archive/refs/tags/$_tag.tar.gz"
-        rlimgui-cmdlists-size.patch)
+        rlimgui-cmdlists-size.patch
+        rlImGui.pc.in)
 sha256sums=('2d2385f42595ca1f5fd10434c1d34b4392994ba28105454ab88bc808a9bafd33'
-            '68220325e5cb693382aefd06e05e754475c0fb88852f31b383d4babad1fefbe4')
+            '68220325e5cb693382aefd06e05e754475c0fb88852f31b383d4babad1fefbe4'
+            '8d9cd647df51b7871d3fd2f0179be0fe3ebaf0109019cdce41c212f15f579b6b')
 
 prepare() {
   cd "rlImGui-$_tag"
@@ -33,18 +35,7 @@ package() {
   install -m644 rlImGui.h rlImGuiColors.h imgui_impl_raylib.h "$pkgdir/usr/include/"
   install -m644 extras/IconsFontAwesome6.h extras/FA6FreeSolidFontData.h "$pkgdir/usr/include/extras/"
   install -m644 "$srcdir/librlImGui.a" "$pkgdir/usr/lib/"
-  cat > "$pkgdir/usr/lib/pkgconfig/rlImGui.pc" <<EOF
-prefix=/usr
-libdir=\${prefix}/lib
-includedir=\${prefix}/include
-
-Name: rlImGui
-Description: Dear ImGui backend for raylib (static)
-Version: $pkgver
-Requires: imgui raylib
-Cflags: -I\${includedir}
-Libs: -L\${libdir} -lrlImGui
-EOF
+  sed "s|@PKGVER@|$pkgver|g" "$srcdir/rlImGui.pc.in" > "$pkgdir/usr/lib/pkgconfig/rlImGui.pc"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
   install -Dm644 extras/FontAwsome_LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/FontAwesome_LICENSE.txt"
 }

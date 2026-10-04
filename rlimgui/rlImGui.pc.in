@@ -1,0 +1,10 @@
+prefix=/usr
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: rlImGui
+Description: Dear ImGui backend for raylib (static)
+Version: @PKGVER@
+Requires: imgui raylib
+Cflags: -I${includedir}
+Libs: -L${libdir} -lrlImGui

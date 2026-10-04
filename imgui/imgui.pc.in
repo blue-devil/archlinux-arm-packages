@@ -1,0 +1,9 @@
+prefix=/usr
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: imgui
+Description: Dear ImGui, immediate mode GUI for C++ (core, static)
+Version: @PKGVER@
+Cflags: -I${includedir}/imgui -I${includedir}/imgui/backends
+Libs: -L${libdir} -limgui
