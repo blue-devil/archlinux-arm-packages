@@ -1,0 +1,90 @@
+# Maintainer: Blue DeviL // SCT <bluedevil [dot] SCT [at] proton [dot] me>
+
+pkgname=imgui
+pkgver=1.92.9
+pkgrel=1
+pkgdesc="Bloat-free immediate mode GUI for C++ with GLFW, SDL2, SDL3, OpenGL 2 and OpenGL 3 backends as static libraries"
+arch=('x86_64' 'aarch64')
+url="https://github.com/ocornut/imgui"
+license=('MIT')
+depends=('glfw' 'libglvnd' 'sdl2' 'sdl3')
+makedepends=('gcc' 'pkgconf')
+options=('staticlibs')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('af97ed649182c39314320514a672b82008ab462b9293fe23d37b30bfa5d05519')
+
+_core=(imgui.cpp imgui_demo.cpp imgui_draw.cpp imgui_tables.cpp imgui_widgets.cpp misc/cpp/imgui_stdlib.cpp)
+_backends=(opengl2 opengl3 glfw sdl2 sdlrenderer2 sdl3 sdlrenderer3)
+
+_backend_pc() {
+  case $1 in
+    glfw) echo glfw3 ;;
+    sdl2|sdlrenderer2) echo sdl2 ;;
+    sdl3|sdlrenderer3) echo sdl3 ;;
+  esac
+}
+
+build() {
+  cd "$pkgname-$pkgver"
+  local _flags=($CXXFLAGS -fPIC -std=c++17 -I. -Ibackends)
+  local _objs=() _extra=()
+  mkdir -p "$srcdir/out"
+  for _src in "${_core[@]}"; do
+    g++ "${_flags[@]}" -c "$_src" -o "$srcdir/out/$(basename "${_src%.cpp}").o"
+    _objs+=("$srcdir/out/$(basename "${_src%.cpp}").o")
+  done
+  ar rcs "$srcdir/out/libimgui.a" "${_objs[@]}"
+  for _b in "${_backends[@]}"; do
+    _extra=()
+    [[ -n $(_backend_pc "$_b") ]] && _extra=($(pkg-config --cflags "$(_backend_pc "$_b")"))
+    g++ "${_flags[@]}" "${_extra[@]}" -c "backends/imgui_impl_$_b.cpp" -o "$srcdir/out/imgui_impl_$_b.o"
+    ar rcs "$srcdir/out/libimgui_impl_$_b.a" "$srcdir/out/imgui_impl_$_b.o"
+  done
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  local _inc="$pkgdir/usr/include/imgui"
+  install -d "$_inc/backends" "$_inc/misc/cpp" "$pkgdir/usr/lib/pkgconfig"
+  install -m644 imgui.h imconfig.h imgui_internal.h imstb_rectpack.h imstb_textedit.h imstb_truetype.h "$_inc/"
+  install -m644 misc/cpp/imgui_stdlib.h "$_inc/misc/cpp/"
+  for _b in "${_backends[@]}"; do
+    install -m644 "backends/imgui_impl_$_b.h" "$_inc/backends/"
+  done
+  install -m644 backends/imgui_impl_opengl3_loader.h "$_inc/backends/"
+  install -m644 "$srcdir"/out/*.a "$pkgdir/usr/lib/"
+
+  cat > "$pkgdir/usr/lib/pkgconfig/imgui.pc" <<EOF
+prefix=/usr
+libdir=\${prefix}/lib
+includedir=\${prefix}/include
+
+Name: imgui
+Description: Dear ImGui, immediate mode GUI for C++ (core, static)
+Version: $pkgver
+Cflags: -I\${includedir}/imgui -I\${includedir}/imgui/backends
+Libs: -L\${libdir} -limgui
+EOF
+  for _b in "${_backends[@]}"; do
+    case $_b in
+      opengl2) _req="imgui gl" _libs="-limgui_impl_opengl2" ;;
+      opengl3) _req="imgui" _libs="-limgui_impl_opengl3 -ldl" ;;
+      *) _req="imgui $(_backend_pc "$_b")" _libs="-limgui_impl_$_b" ;;
+    esac
+    cat > "$pkgdir/usr/lib/pkgconfig/imgui_impl_$_b.pc" <<EOF
+prefix=/usr
+libdir=\${prefix}/lib
+includedir=\${prefix}/include
+
+Name: imgui_impl_$_b
+Description: Dear ImGui $_b backend (static)
+Version: $pkgver
+Requires: $_req
+Cflags: -I\${includedir}/imgui/backends
+Libs: -L\${libdir} $_libs
+EOF
+  done
+  install -Dm644 LICENSE.txt "$pkgdir/usr/share/licenses/$pkgname/LICENSE.txt"
+}
+
+# vim: ts=2 sw=2 et:

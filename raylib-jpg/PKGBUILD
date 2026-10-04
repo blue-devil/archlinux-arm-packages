@@ -1,0 +1,52 @@
+# Maintainer: Alexander F. Rødseth <xyproto@archlinux.org>
+# Contributor: Wilhem Barbier <wilhem.b@free.fr>
+# Contributor: Blue DeviL // SCT <bluedevil [dot] SCT [at] proton [dot] me>
+
+pkgname=raylib-jpg
+_pkgname=raylib
+pkgver=6.0
+pkgrel=1
+pkgdesc='Simple and easy-to-use game programming library, with JPG file format support enabled'
+arch=(x86_64 aarch64)
+url='https://www.raylib.com'
+license=(Zlib)
+provides=("$_pkgname=$pkgver")
+conflicts=("$_pkgname")
+makedepends=(cmake libx11 libxcursor libxinerama libxrandr libxi vulkan-headers xorg-server-devel xorg-xinput)
+source=("$_pkgname-$pkgver.tar.gz::https://github.com/raysan5/raylib/archive/refs/tags/$pkgver.tar.gz"
+        raylib-enable-jpg.patch)
+sha256sums=('2b3ee1e2120c7a0796b33062c7e9a694dd8a8caa56a96319ac8c8ecf54a90d0b'
+            '622d5f2edcab6f3bfba5445de738db92232ccb0dcc7132077d560ad2a4c324b6')
+
+prepare() {
+  cd "$_pkgname-$pkgver"
+  patch -p1 -i "$srcdir/raylib-enable-jpg.patch"
+}
+
+build() {
+  cmake \
+    -B build \
+    -D BUILD_EXAMPLES=OFF \
+    -D BUILD_SHARED_LIBS=ON \
+    -D CMAKE_BUILD_TYPE=Release \
+    -D CMAKE_C_FLAGS="$CFLAGS -fPIC -w" \
+    -D CMAKE_INSTALL_LIBDIR=lib \
+    -D CMAKE_INSTALL_PREFIX=/usr \
+    -D OpenGL_GL_PREFERENCE=GLVND \
+    -D PLATFORM=Desktop \
+    -D USE_EXTERNAL_GLFW=OFF \
+    -D WITH_PIC=ON \
+    -S "$_pkgname-$pkgver" \
+    -W no-dev
+  make -C build
+}
+
+package() {
+  DESTDIR="$pkgdir" make -C build install
+  for f in rcamera rgestures; do
+    install -Dm644 "$_pkgname-$pkgver/src/$f.h" "$pkgdir/usr/include/$f.h"
+  done
+  install -Dm644 "$_pkgname-$pkgver/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+# vim: ts=2 sw=2 et:

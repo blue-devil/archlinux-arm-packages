@@ -1,0 +1,11 @@
+--- a/rlImGui.cpp
++++ b/rlImGui.cpp
+@@ -766,7 +766,7 @@
+     rlDrawRenderBatchActive();
+     rlDisableBackfaceCulling();
+ 
+-    for (int l = 0; l < draw_data->CmdListsCount; ++l)
++    for (int l = 0; l < draw_data->CmdLists.Size; ++l)
+     {
+         const ImDrawList* commandList = draw_data->CmdLists[l];
+ 

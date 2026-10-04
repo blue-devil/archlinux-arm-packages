@@ -1,0 +1,24 @@
+# Maintainer: Blue DeviL // SCT <bluedevil [dot] SCT [at] proton [dot] me>
+
+pkgname=raygui
+pkgver=5.0
+pkgrel=1
+pkgdesc="Simple and easy-to-use immediate-mode GUI library for raylib, header only"
+arch=('any')
+url="https://github.com/raysan5/raygui"
+license=('Zlib')
+depends=('raylib')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/$pkgver.tar.gz")
+sha256sums=('0f194c4a5e837c0930aca0b6315db45d00f76fa0052d841eea94598d390c39d6')
+
+package() {
+  cd "$pkgname-$pkgver"
+  install -Dm644 src/raygui.h "$pkgdir/usr/include/raygui.h"
+  for _rgs in styles/*/style_*.rgs; do
+    install -Dm644 -t "$pkgdir/usr/share/raygui/styles/$(basename "$(dirname "$_rgs")")" \
+      "$_rgs" "${_rgs%.rgs}.h"
+  done
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+# vim: ts=2 sw=2 et:
