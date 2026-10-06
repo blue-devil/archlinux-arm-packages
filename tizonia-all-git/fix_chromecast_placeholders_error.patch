@@ -1,0 +1,11 @@
+diff -U1 -r tizonia-all-git.orig/clients/chromecast/libtizchromecast/src/tizchromecast.cpp tizonia-all-git/clients/chromecast/libtizchromecast/src/tizchromecast.cpp
+--- tizonia-all-git.orig/clients/chromecast/libtizchromecast/src/tizchromecast.cpp	2022-10-16 19:22:24.229914127 +0200
++++ tizonia-all-git/clients/chromecast/libtizchromecast/src/tizchromecast.cpp	2022-10-16 19:28:40.529902356 +0200
+@@ -107,5 +107,5 @@
+       handler_fn1 cast_status_handler (
+-          boost::bind (&tizchromecast::new_cast_status, this, _1, _2));
++          boost::bind (&tizchromecast::new_cast_status, this, boost::placeholders::_1, boost::placeholders::_2));
+       handler_fn2 media_status_handler (
+-          boost::bind (&tizchromecast::new_media_status, this, _1, _2));
++          boost::bind (&tizchromecast::new_media_status, this, boost::placeholders::_1, boost::placeholders::_2));
+       try_catch_wrapper (py_cc_proxy.attr ("activate") (

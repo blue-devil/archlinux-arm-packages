@@ -1,0 +1,11 @@
+--- a/libtizonia/src/meson.build
++++ b/libtizonia/src/meson.build
+@@ -136,6 +136,7 @@ libtizonia_sources = [
+ libtizonia = library(
+    'tizonia',
+    version: tizversion,
+    sources: libtizonia_sources,
++   link_args: ['-Wl,-Bsymbolic-functions'],
+    dependencies: [
+       libtizplatform_dep,
+       libtizrmproxy_dep,

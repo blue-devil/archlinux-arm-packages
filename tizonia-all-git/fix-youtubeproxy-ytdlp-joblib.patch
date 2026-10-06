@@ -1,0 +1,56 @@
+--- a/clients/youtube/youtubeproxy/tizyoutubeproxy.py
++++ b/clients/youtube/youtubeproxy/tizyoutubeproxy.py
+@@ -30,6 +30,44 @@
+ import unicodedata
+ import re
+ import getpass
++
++# Prefer yt-dlp as the pafy backend: the legacy youtube-dl extractor can no
++# longer retrieve streams from YouTube ("The page needs to be reloaded.").
++try:
++    import yt_dlp
++
++    sys.modules["youtube_dl"] = yt_dlp
++
++    # pafy expects 'abr' to be numeric; yt-dlp reports None for some formats.
++    _orig_extract_info = yt_dlp.YoutubeDL.extract_info
++
++    def _extract_info(self, *args, **kwargs):
++        info = _orig_extract_info(self, *args, **kwargs)
++        for fmt in (info or {}).get("formats") or []:
++            if fmt.get("abr") is None:
++                fmt["abr"] = 0
++        return info
++
++    yt_dlp.YoutubeDL.extract_info = _extract_info
++
++    # Optional YouTube cookies (Netscape cookie jar) for yt-dlp, used when
++    # anonymous extraction is rejected ("Sign in to confirm you're not a bot").
++    _cookiefile = os.path.join(
++        os.path.expanduser(os.getenv("XDG_CONFIG_HOME", "~/.config")),
++        "tizonia",
++        "youtube-cookies.txt",
++    )
++    if os.path.isfile(_cookiefile):
++        _orig_init = yt_dlp.YoutubeDL.__init__
++
++        def _init(self, params=None, *args, **kwargs):
++            params = dict(params or {})
++            params.setdefault("cookiefile", _cookiefile)
++            return _orig_init(self, params, *args, **kwargs)
++
++        yt_dlp.YoutubeDL.__init__ = _init
++except ImportError:
++    pass
+ import pafy
+ import configparser
+ from multiprocessing.dummy import Process, Queue
+@@ -75,7 +113,7 @@
+     except Exception:
+         pass
+ 
+-MEMORY = Memory(YOUTUBE_CACHE_LOCATION, compress=9, verbose=0, bytes_limit=10485760)
++MEMORY = Memory(YOUTUBE_CACHE_LOCATION, compress=9, verbose=0)
+ MEMORY.reduce_size()
+ 
+ API_KEY = "AIzaSyC3iXWKvY6iOC3SoglRAekDXqutQiMuCxc"
