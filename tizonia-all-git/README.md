@@ -40,6 +40,12 @@ The notorious `youtube-dl` python module was deprecated. So I made yt-dlp
 work with tizonia with this patch. And also auto-loads
 `~/.config/tizonia/youtube-cookies.txt` for the yt's bot-check.
 
+## patch: `fix-python-thefuzz.patch`
+
+The python module `fuzzywuzzy` is a deprecated python module. Same developer
+offer a new updated module: `thefuzz`. So this patch removes old module
+and places new `thefuzz` module.
+
 ## Getting Proper Cookies
 
 I am using [Cookie Editor][02]. When you click Cookie Editor while your are

@@ -1,0 +1,61 @@
+--- a/clients/youtube/youtubeproxy/tizyoutubeproxy.py
++++ b/clients/youtube/youtubeproxy/tizyoutubeproxy.py
+@@ -72,8 +72,8 @@
+ import configparser
+ from multiprocessing.dummy import Process, Queue
+ from joblib import Memory
+-from fuzzywuzzy import process
+-from fuzzywuzzy import fuzz
++from thefuzz import process
++from thefuzz import fuzz
+ 
+ 
+ TMPDIR = "/var/tmp"
+--- a/clients/iheart/iheartproxy/tiziheartproxy.py
++++ b/clients/iheart/iheartproxy/tiziheartproxy.py
+@@ -46,7 +46,7 @@
+ from urllib.parse import urlparse
+ import requests
+ from joblib import Memory
+-from fuzzywuzzy import fuzz
++from thefuzz import fuzz
+ 
+ # FOR REFERENCE
+ # -> station
+--- a/clients/plex/plexproxy/tizplexproxy.py
++++ b/clients/plex/plexproxy/tizplexproxy.py
+@@ -31,8 +31,8 @@
+ from plexapi.exceptions import NotFound
+ from plexapi.myplex import MyPlexAccount
+ from plexapi.server import PlexServer
+-from fuzzywuzzy import process
+-from fuzzywuzzy import fuzz
++from thefuzz import process
++from thefuzz import fuzz
+ import imp
+ 
+ if sys.version[0] == "2":
+--- a/clients/soundcloud/soundcloudproxy/tizsoundcloudproxy.py
++++ b/clients/soundcloud/soundcloudproxy/tizsoundcloudproxy.py
+@@ -31,7 +31,7 @@
+ import unicodedata
+ from requests.exceptions import HTTPError
+ from operator import itemgetter
+-from fuzzywuzzy import process
++from thefuzz import process
+ import imp
+ import configparser
+ 
+--- a/clients/tunein/tuneinproxy/tiztuneinproxy.py
++++ b/clients/tunein/tuneinproxy/tiztuneinproxy.py
+@@ -44,8 +44,8 @@
+ from requests import Session
+ from urllib.parse import urlparse
+ from joblib import Memory
+-from fuzzywuzzy import process
+-from fuzzywuzzy import fuzz
++from thefuzz import process
++from thefuzz import fuzz
+ from functools import reduce
+ import requests
+ 
