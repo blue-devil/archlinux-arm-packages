@@ -40,7 +40,7 @@ depends=(
 
   # AUR:
   'log4c' # Actually, it is mandatory. See https://aur.archlinux.org/packages/tizonia-all-git#comment-927774.
-  'python-fuzzywuzzy'
+  'python-thefuzz'
   'python-pafy'
   'python-plexapi'
   'python-pychromecast'
