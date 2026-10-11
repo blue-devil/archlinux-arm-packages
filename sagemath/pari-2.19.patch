@@ -1,0 +1,402 @@
+From 450863b03e14c23944afb1b8b5ed35512bb43d07 Mon Sep 17 00:00:00 2001
+From: Antonio Rojas <arojas@archlinux.org>
+Date: Tue, 29 Sep 2026 20:44:50 +0200
+Subject: [PATCH 1/5] Port away from deprecated polsturm signature
+
+---
+ src/sage/ext_data/pari/simon/ellQ.gp      | 6 +++---
+ src/sage/ext_data/pari/simon/ellcommon.gp | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/sage/ext_data/pari/simon/ellQ.gp b/src/sage/ext_data/pari/simon/ellQ.gp
+index 91b81c277ad..327ff56d7d7 100644
+--- a/src/sage/ext_data/pari/simon/ellQ.gp
++++ b/src/sage/ext_data/pari/simon/ellQ.gp
+@@ -523,14 +523,14 @@ if( DEBUGLEVEL_ell >= 5, print("     starting polrealrootsisolate with pol = ",p
+   st = polsturm(pol);
+   if( !st, return([]));
+   a = 1;
+-  while( polsturm(pol,-a,a) < st, a <<= 1);
++  while( polsturm(pol,[-a,a]) < st, a <<= 1);
+   res = [[-a,a,st]];
+   ind = 1;
+   while( #res < st,
+     while( res[ind][3] == 1, ind++);
+     a = res[ind][1]; b = res[ind][2]; stab = res[ind][3];
+     c = (a+b)/2;
+-    stac = polsturm(pol,a,c);
++    stac = polsturm(pol,[a,c]);
+     if( stac == 0, res[ind][1] = c; next);
+     if( stac == stab, res[ind][2] = c; next);
+     res[ind] = [a,c,stac];
+@@ -1193,7 +1193,7 @@ if( DEBUGLEVEL_ell >= 5, print("     Computing the sign of elt = ",elt));
+     st = 1;
+     compt = 0;
+     while( st,
+-      st = polsturm(elt2,rootapprox[1],rootapprox[2]);
++      st = polsturm(elt2,[rootapprox[1],rootapprox[2]]);
+       if( st,
+         rootapprox = polrealrootsimprove(component(gen[i],1),rootapprox);
+ \\        rootapprox = polrealrootsimprove(gen[i].mod,rootapprox);
+diff --git a/src/sage/ext_data/pari/simon/ellcommon.gp b/src/sage/ext_data/pari/simon/ellcommon.gp
+index 968e4cf5cf5..51eaa0436fb 100644
+--- a/src/sage/ext_data/pari/simon/ellcommon.gp
++++ b/src/sage/ext_data/pari/simon/ellcommon.gp
+@@ -106,7 +106,7 @@ my(alift,ta,minpola,py,pfact);
+ \\ the real embeddings must all be >0
+ 
+   minpola = minpoly(a);
+-  if( polsturm(minpola,,0), return([]));
++  if( polsturm(minpola,[-oo,0]), return([]));
+ 
+ \\ factorization over nf of the polynomial X^2-a
+ 
+
+From d5f534fea727b7b10b13beffef5b614ce0960d02 Mon Sep 17 00:00:00 2001
+From: Antonio Rojas <arojas@archlinux.org>
+Date: Tue, 29 Sep 2026 20:47:25 +0200
+Subject: [PATCH 2/5] Use \c instead of ?* to list commands, which no longer
+ works in 2.19
+
+---
+ src/sage/interfaces/gp.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/sage/interfaces/gp.py b/src/sage/interfaces/gp.py
+index e9d005c73dd..3ec71eb7319 100644
+--- a/src/sage/interfaces/gp.py
++++ b/src/sage/interfaces/gp.py
+@@ -367,7 +367,7 @@ def _tab_completion(self):
+         try:
+             b = self.__builtin
+         except AttributeError:
+-            b = self.eval('?*').split()
++            b = self.eval('\\c').split()
+             self.__builtin = b
+         return b + self.eval('?0').split()
+ 
+
+From 0d6fbb70f5cd096c12a683f9a752fbcdd047bea5 Mon Sep 17 00:00:00 2001
+From: Antonio Rojas <arojas@archlinux.org>
+Date: Tue, 29 Sep 2026 21:07:19 +0200
+Subject: [PATCH 3/5] Port away from deprecated polsturm signature
+
+---
+ src/sage/libs/pari/tests.py | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/src/sage/libs/pari/tests.py b/src/sage/libs/pari/tests.py
+index b55e9df944c..b338483ca31 100644
+--- a/src/sage/libs/pari/tests.py
++++ b/src/sage/libs/pari/tests.py
+@@ -148,8 +148,7 @@
+     sage: pari.poltchebi(10)
+     doctest:...: DeprecationWarning: the PARI/GP function poltchebi is obsolete (2013-04-03)
+     512*x^10 - 1280*x^8 + 1120*x^6 - 400*x^4 + 50*x^2 - 1
+-    sage: pari("x^3 + 1").polsturm(-1, 1)
+-    doctest:...: DeprecationWarning: argument 2 of the PARI/GP function polsturm is undocumented and deprecated
++    sage: pari("x^3 + 1").polsturm([-1, 1])
+     1
+     sage: x = pari('10^100')
+     sage: x.Str().length()
+
+From 77aa9d5c84d400b2461b71a12b5e3ff015628405 Mon Sep 17 00:00:00 2001
+From: Antonio Rojas <arojas@archlinux.org>
+Date: Tue, 29 Sep 2026 22:22:42 +0200
+Subject: [PATCH 4/5] Drop use of deprecated listcreate
+
+---
+ src/sage/combinat/sloane_functions.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/sage/combinat/sloane_functions.py b/src/sage/combinat/sloane_functions.py
+index 94bb10a967b..31b728e64c9 100644
+--- a/src/sage/combinat/sloane_functions.py
++++ b/src/sage/combinat/sloane_functions.py
+@@ -6790,7 +6790,7 @@ def _powerful_numbers_in_range(self, n, m):
+         n = max(n, 4)
+         # Use PARI directly -- much faster.
+         from sage.libs.pari import pari
+-        L = pari('v=listcreate(); for(i=%s,%s,if(vecmin(factor(i)[,2])>1,listput(v,i))); v' % (n, m))
++        L = pari('v=List(); for(i=%s,%s,if(vecmin(factor(i)[,2])>1,listput(v,i))); v' % (n, m))
+         return [ZZ(x) for x in L]  # not very many, so not much overhead
+ 
+     def _eval(self, n):
+
+From 883afba607aa4685111394c8a2069fbb34490a56 Mon Sep 17 00:00:00 2001
+From: Antonio Rojas <arojas@archlinux.org>
+Date: Tue, 29 Sep 2026 23:14:26 +0200
+Subject: [PATCH 5/5] Update tests for pari 2.19
+
+---
+ src/sage/lfunctions/dokchitser.py                  |  4 ++--
+ src/sage/lfunctions/pari.py                        | 10 +++++-----
+ src/sage/modular/modform/l_series_gross_zagier.py  |  6 +++---
+ src/sage/rings/finite_rings/element_base.pyx       |  4 +++-
+ src/sage/rings/finite_rings/element_pari_ffelt.pyx |  4 +++-
+ src/sage/rings/number_field/class_group.py         |  6 +++---
+ src/sage/rings/number_field/number_field.py        |  8 +++-----
+ src/sage/rings/number_field/number_field_ideal.py  |  4 +++-
+ src/sage/schemes/elliptic_curves/ell_generic.py    |  6 +++---
+ src/sage/schemes/elliptic_curves/period_lattice.py |  2 +-
+ src/sage/schemes/projective/projective_morphism.py |  2 +-
+ src/sage/structure/factorization.py                | 12 ++++++++----
+ 12 files changed, 38 insertions(+), 30 deletions(-)
+
+diff --git a/src/sage/lfunctions/dokchitser.py b/src/sage/lfunctions/dokchitser.py
+index 1b16bfed13e..586bbbe4d05 100644
+--- a/src/sage/lfunctions/dokchitser.py
++++ b/src/sage/lfunctions/dokchitser.py
+@@ -127,7 +127,7 @@ class Dokchitser(SageObject):
+         sage: L.derivative(1,E.rank())
+         1.51863300057685
+         sage: L.taylor_series(1,4)
+-        ...e-19 + (...e-19)*z + 0.759316500288427*z^2 - 0.430302337583362*z^3 + O(z^4)
++        ...e-... + (...e-...)*z + 0.759316500288427*z^2 - 0.430302337583362*z^3 + O(z^4)
+ 
+     NUMBER FIELD:
+ 
+@@ -592,7 +592,7 @@ def taylor_series(self, a=0, k=6, var='z'):
+             sage: E = EllipticCurve('389a')
+             sage: L = E.lseries().dokchitser(200, algorithm='pari')
+             sage: L.taylor_series(1,3)
+-            ...e-63 + (...e-63)*z + 0.75931650028842677023019260789472201907809751649492435158581*z^2 + O(z^3)
++            ...e-... + (...e-...)*z + 0.75931650028842677023019260789472201907809751649492435158581*z^2 + O(z^3)
+         """
+         self.__check_init()
+         a = self.__CC(a)
+diff --git a/src/sage/lfunctions/pari.py b/src/sage/lfunctions/pari.py
+index f0e9b57a42f..65070bca4b2 100644
+--- a/src/sage/lfunctions/pari.py
++++ b/src/sage/lfunctions/pari.py
+@@ -356,7 +356,7 @@ def lfun_elliptic_curve(E):
+         sage: E = EllipticCurve([1, a])
+         sage: L = LFunction(lfun_elliptic_curve(E))
+         sage: L(3)
+-        1.00412346717019
++        1.0041234671...
+     """
+     return pari.lfuncreate(E)
+ 
+@@ -537,12 +537,12 @@ def lfun_genus2(C):
+         sage: L = LFunction(lfun_genus2(C))  # this one is broken
+         ...
+         sage: L(3)
+-        0.965946926261520
++        0.965...
+ 
+         sage: C = HyperellipticCurve(x^2 + x, x^3 + x^2 + 1)
+         sage: L = LFunction(lfun_genus2(C))
+         sage: L(2)
+-        0.364286342944359
++        0.364286342944...
+ 
+     TESTS::
+ 
+@@ -598,7 +598,7 @@ class LFunction(SageObject):
+         sage: L.derivative(1, E.rank())
+         1.51863300057685
+         sage: L.taylor_series(1, 4)
+-        ...e-19 + (...e-19)*z + 0.759316500288427*z^2 - 0.430302337583362*z^3 + O(z^4)
++        ...e-... + (...e-...)*z + 0.759316500288427*z^2 - 0.430302337583362*z^3 + O(z^4)
+ 
+     .. RUBRIC:: Number field
+ 
+@@ -872,7 +872,7 @@ def taylor_series(self, s, k=6, var='z'):
+             sage: E = EllipticCurve('389a')
+             sage: L = E.lseries().dokchitser(200,algorithm='pari')
+             sage: L.taylor_series(1, 3)
+-            2...e-63 + (...e-63)*z + 0.75931650028842677023019260789472201907809751649492435158581*z^2 + O(z^3)
++            ...e-... + (...e-...)*z + 0.75931650028842677023019260789472201907809751649492435158581*z^2 + O(z^3)
+ 
+         Check that :issue:`25402` is fixed::
+ 
+diff --git a/src/sage/modular/modform/l_series_gross_zagier.py b/src/sage/modular/modform/l_series_gross_zagier.py
+index d13f96ee5cc..fad8539958e 100644
+--- a/src/sage/modular/modform/l_series_gross_zagier.py
++++ b/src/sage/modular/modform/l_series_gross_zagier.py
+@@ -96,9 +96,9 @@ def __call__(self, s, der=0):
+             sage: from sage.modular.modform.l_series_gross_zagier import GrossZagierLseries
+             sage: G = GrossZagierLseries(e, A)
+             sage: G(3)
+-            -0.272946890617449
++            -0.272946890617...
+             sage: G(3, 1)
+-            0.212442670030197
++            0.212442670030...
+         """
+         return self._lfunction.derivative(s, der)
+ 
+@@ -120,6 +120,6 @@ def taylor_series(self, s=1, series_prec=6, var='z'):
+             sage: from sage.modular.modform.l_series_gross_zagier import GrossZagierLseries
+             sage: G = GrossZagierLseries(e, A)
+             sage: G.taylor_series(2,3)
+-            -0.613002046122888 + 0.490374999263489*z - 0.122903033710347*z^2 + O(z^3)
++            -0.6130020461228... + 0.490374999263...*z - 0.1229030337103...*z^2 + O(z^3)
+         """
+         return self._lfunction.taylor_series(s, series_prec, var)
+diff --git a/src/sage/rings/finite_rings/element_base.pyx b/src/sage/rings/finite_rings/element_base.pyx
+index 118a5cbfce3..f751bd0625d 100644
+--- a/src/sage/rings/finite_rings/element_base.pyx
++++ b/src/sage/rings/finite_rings/element_base.pyx
+@@ -888,8 +888,10 @@ cdef class FinitePolyExtElement(FiniteRingElement):
+         EXAMPLES::
+ 
+             sage: k.<a> = GF(3^17)
+-            sage: (a^3 - a - 1).sqrt()
++            sage: (a^3 - a - 1).sqrt() # random - depends on pari version
+             a^16 + 2*a^15 + a^13 + 2*a^12 + a^10 + 2*a^9 + 2*a^8 + a^7 + a^6 + 2*a^5 + a^4 + 2*a^2 + 2*a + 2
++            sage: _^2 == a^3 - a - 1
++            True
+         """
+         return self.square_root(extend=extend, all=all)
+ 
+diff --git a/src/sage/rings/finite_rings/element_pari_ffelt.pyx b/src/sage/rings/finite_rings/element_pari_ffelt.pyx
+index ec2a5c4804e..cc29bcc6920 100644
+--- a/src/sage/rings/finite_rings/element_pari_ffelt.pyx
++++ b/src/sage/rings/finite_rings/element_pari_ffelt.pyx
+@@ -1076,8 +1076,10 @@ cdef class FiniteFieldElement_pari_ffelt(FinitePolyExtElement):
+             []
+ 
+             sage: K.<a> = GF(3^17, implementation='pari_ffelt')
+-            sage: (a^3 - a - 1).sqrt()
++            sage: (a^3 - a - 1).sqrt()  # random - depends on pari version
+             a^16 + 2*a^15 + a^13 + 2*a^12 + a^10 + 2*a^9 + 2*a^8 + a^7 + a^6 + 2*a^5 + a^4 + 2*a^2 + 2*a + 2
++            sage: _^2 == a^3 - a - 1
++            True
+         """
+         if extend:
+             raise NotImplementedError
+diff --git a/src/sage/rings/number_field/class_group.py b/src/sage/rings/number_field/class_group.py
+index 84d080bd918..f81c2e081c5 100644
+--- a/src/sage/rings/number_field/class_group.py
++++ b/src/sage/rings/number_field/class_group.py
+@@ -522,10 +522,10 @@ def gens_ideals(self):
+             sage: C = NumberField(x^2 + x + 23899, 'a').class_group(); C
+             Class group of order 68 with structure C34 x C2 of Number Field
+             in a with defining polynomial x^2 + x + 23899
+-            sage: C.gens()
++            sage: C.gens()  # random - depends on pari version
+             (Fractional ideal class (83, a + 21), Fractional ideal class (15, a + 8))
+-            sage: C.gens_ideals()
+-            (Fractional ideal (83, a + 21), Fractional ideal (15, a + 8))
++            sage: C.gens() == C.gens_ideals()
++            True
+         """
+         return self.gens_values()
+ 
+diff --git a/src/sage/rings/number_field/number_field.py b/src/sage/rings/number_field/number_field.py
+index b445dc3ba61..b8f0720b7d2 100644
+--- a/src/sage/rings/number_field/number_field.py
++++ b/src/sage/rings/number_field/number_field.py
+@@ -4848,17 +4848,15 @@ def _S_class_group_and_units(self, S, proof=True):
+ 
+         Number fields defined by non-monic and non-integral
+         polynomials are supported (:issue:`252`). The units returned
+-        below differ slightly depending on the CPU::
++        below differ slightly depending on the CPU and the pari version::
+ 
+             sage: K.<a> = NumberField(2*x^2 - 1/3)
+             sage: ps = tuple(K.primes_above(2) + K.primes_above(3))
+             sage: units, gens = K._S_class_group_and_units(ps)
+             sage: gens
+             []
+-            sage: units  # needs 32_bit
+-            [6*a + 2, -6*a - 3, -1, -12*a - 5]
+-            sage: units  # needs !32_bit
+-            [6*a + 2, -6*a + 3, -1, -12*a - 5]
++            sage: units
++            [6*a + 2, -6*a ... 3, -1, -12*a - 5]
+ 
+         """
+         K_pari = self.pari_bnf(proof=proof)
+diff --git a/src/sage/rings/number_field/number_field_ideal.py b/src/sage/rings/number_field/number_field_ideal.py
+index 54b4fad86d8..1864aace84c 100644
+--- a/src/sage/rings/number_field/number_field_ideal.py
++++ b/src/sage/rings/number_field/number_field_ideal.py
+@@ -240,8 +240,10 @@ def _richcmp_(self, other, op):
+             sage: x = polygen(ZZ)
+             sage: K.<a> = NumberField(x^2 + 3); K
+             Number Field in a with defining polynomial x^2 + 3
+-            sage: f = K.factor(15); f
++            sage: f = K.factor(15); f  # random - depends on pari version
+             (Fractional ideal (-a))^2 * (Fractional ideal (5))
++            sage: f[0][0] == K.ideal(a)
++            True
+             sage: (f[0][0] < f[1][0])  # potentially random
+             True
+             sage: (f[0][0] == f[0][0])
+diff --git a/src/sage/schemes/elliptic_curves/ell_generic.py b/src/sage/schemes/elliptic_curves/ell_generic.py
+index b8cfea863d5..3b8b132ac85 100644
+--- a/src/sage/schemes/elliptic_curves/ell_generic.py
++++ b/src/sage/schemes/elliptic_curves/ell_generic.py
+@@ -3708,9 +3708,9 @@ def pari_curve(self):
+             sage: K.<a> = QuadraticField(2)                                             # needs sage.libs.pari sage.rings.number_field
+             sage: E = EllipticCurve([1,a])                                              # needs sage.libs.pari sage.rings.number_field
+             sage: E.pari_curve()                                                        # needs sage.libs.pari sage.rings.number_field
+-            [0, 0, 0, Mod(1, y^2 - 2),
+-             Mod(y, y^2 - 2), 0, Mod(2, y^2 - 2), Mod(4*y, y^2 - 2),
+-             Mod(-1, y^2 - 2), Mod(-48, y^2 - 2), Mod(-864*y, y^2 - 2),
++            [0, 0, 0, ...1...,
++             Mod(y, y^2 - 2), 0, ...2..., Mod(4*y, y^2 - 2),
++             ...-1..., ...-48..., Mod(-864*y, y^2 - 2),
+              Mod(-928, y^2 - 2), Mod(3456/29, y^2 - 2),
+              Vecsmall([5]),
+              [[y^2 - 2, [2, 0], 8, 1, [[1, -1.41421356237310; 1, 1.41421356237310],
+diff --git a/src/sage/schemes/elliptic_curves/period_lattice.py b/src/sage/schemes/elliptic_curves/period_lattice.py
+index 376f5a29f4a..d8bda08eb40 100644
+--- a/src/sage/schemes/elliptic_curves/period_lattice.py
++++ b/src/sage/schemes/elliptic_curves/period_lattice.py
+@@ -1955,7 +1955,7 @@ def elliptic_exponential(self, z, to_curve=True):
+             (0.0000142854026029 - 49.9960001066650*I
+              : 249.520141250950 + 250.019855549131*I : 1.00000000000000)
+             sage: L.elliptic_exponential(CDF(.1,.1), to_curve=False)
+-            (0.0000142854026029447 - 49.9960001066650*I,
++            (0.00001428540260294... - 49.9960001066650*I,
+              500.040282501900 + 500.039711098263*I)
+ 
+         `z=0` is treated as a special case::
+diff --git a/src/sage/schemes/projective/projective_morphism.py b/src/sage/schemes/projective/projective_morphism.py
+index f4da2fdb8ef..8272ae679b9 100644
+--- a/src/sage/schemes/projective/projective_morphism.py
++++ b/src/sage/schemes/projective/projective_morphism.py
+@@ -927,7 +927,7 @@ def normalize_coordinates(self, **kwds):
+             sage: f.normalize_coordinates(); f
+             Dynamical System of Projective Space of dimension 1 over Number Field in a with defining polynomial 3*x^2 + 1
+               Defn: Defined on coordinates by sending (z : w) to
+-                    (z^2 + w^2 : (-3*a)*z*w)
++                    (...z^2 + ...w^2 : (...)*z*w)
+ 
+         ::
+ 
+diff --git a/src/sage/structure/factorization.py b/src/sage/structure/factorization.py
+index c01e88f415c..0e8dd3ac687 100644
+--- a/src/sage/structure/factorization.py
++++ b/src/sage/structure/factorization.py
+@@ -141,18 +141,22 @@
+     sage: x = ZZ['x'].0
+     sage: K.<a> = NumberField(x^2 + 3); K
+     Number Field in a with defining polynomial x^2 + 3
+-    sage: f = K.factor(15); f
++    sage: f = K.factor(15); f  # random - depends on pari version
+     (Fractional ideal (-a))^2 * (Fractional ideal (5))
+     sage: f.universe()
+     Monoid of ideals of Number Field in a with defining polynomial x^2 + 3
+     sage: f.unit()
+     Fractional ideal (1)
+-    sage: g = K.factor(9); g
++    sage: g = K.factor(9); g  # random - depends on pari version
+     (Fractional ideal (-a))^4
+-    sage: f.lcm(g)
++    sage: f.lcm(g)  # random - depends on pari version
+     (Fractional ideal (-a))^4 * (Fractional ideal (5))
+-    sage: f.gcd(g)
++    sage: list(f.lcm(g)) == [(K.ideal(a), 4), (K.ideal(5), 1)]
++    True
++    sage: f.gcd(g)  # random - depends on pari version
+     (Fractional ideal (-a))^2
++    sage: list(f.gcd(g)) == [(K.ideal(a), 2)]
++    True
+     sage: f.is_integral()
+     True
+ 

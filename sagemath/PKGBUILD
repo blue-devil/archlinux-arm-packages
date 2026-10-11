@@ -7,8 +7,8 @@
 # Contributor: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 pkgname=sagemath
-pkgver=10.9
-pkgrel=6
+pkgver=10.10
+pkgrel=2
 pkgdesc='Open Source Mathematics Software, free alternative to Magma, Maple, Mathematica, and Matlab'
 arch=('x86_64' 'aarch64')
 url='http://www.sagemath.org'
@@ -115,6 +115,7 @@ optdepends=('benzene: for generating fusenes and benzenoids'
             'python-pycosat: picosat SAT solver'
             'python-pynormaliz: Normaliz backend for polyhedral computations'
             'python-pyscipopt: SCIP mixed integer linear programming backend'
+            'python-sphinx: to print documentation in HTML format'
             'regina: some methods related to low-dimensional topology'
             'rubiks: Rubiks cube algorithms'
             'sage-data-cunningham_tables: list of prime numbers in the Cunningham table'
@@ -122,6 +123,7 @@ optdepends=('benzene: for generating fusenes and benzenoids'
             'sagemath-giac: giac integration backend'
             'shared_meataxe: faster matrix arithmetic over finite fields'
             'sirocco: for computing the fundamental group of the complement of a plane curve'
+            'snappy-manifolds: for some additional knot methods'
             'topcom: to compute triangulations of point configurations')
 makedepends=(bliss
              boost
@@ -141,28 +143,29 @@ makedepends=(bliss
 checkdepends=(python-pytest)
 source=(git+https://github.com/sagemath/sage#tag=$pkgver
         latte-count.patch
-        maxima-5.48.patch
-        planarity-5.patch)
-sha256sums=('62fed909146a7cec5809c954a06a0932b8fe3e6bbde2a2dab305083cd98d0a91'
+        networkx-3.7.patch
+        pari-2.19.patch)
+sha256sums=('a940259a5fc00e3d6aae916176f346373026f151a8c4575c5711eb9316f9b058'
             'c3aa0243de70fe9c58772c83e748510b7af6950f98d01b3a819e6f8d1232c797'
-            'a2d0663fe563bd131d47687086e36b1cbd9af158993226f69fecba8344cedb8a'
-            '755e7042704f5c18b49dc9330a1d2a999ef187c331aa96d0367ed093fb2676c6')
+            '26f2918e3b775c89d235abab080012186e1d0070ae327f882cf7a95242b7ccf2'
+            'c3ae95ccade6db780b50590dd4ea507312a870bbf0f4d5ce8f415ff9af75e663')
 
 prepare(){
   cd sage
 
 # use correct latte-count binary name
   patch -p1 -i ../latte-count.patch
-# adapt to maxima 5.48 changes
-  patch -p1 -i ../maxima-5.48.patch
-# fix build with planarity 5
-  patch -p1 -i ../planarity-5.patch
+# Networkx 3.7 fixes
+  patch -p1 -i ../networkx-3.7.patch
+# support pari 2.19
+  patch -p1 -i ../pari-2.19.patch
 }
 
 build() {
   cd sage
   python -m build --wheel --no-isolation \
-    -C setup-args=-Dbuild-docs=false
+    -C setup-args=-Dbuild-docs=false \
+    -C setup-args=-Ddefer_feature_checks=true
 }
 
 check() {
