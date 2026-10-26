@@ -53,4 +53,4 @@
 +MEMORY = Memory(YOUTUBE_CACHE_LOCATION, compress=9, verbose=0)
  MEMORY.reduce_size()
  
- API_KEY = "AIzaSyC3iXWKvY6iOC3SoglRAekDXqutQiMuCxc"
+ API_KEY = "Put_A_Valid_Youtube_API_Key_Here_OKMAte"
