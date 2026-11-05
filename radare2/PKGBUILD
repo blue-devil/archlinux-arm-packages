@@ -4,7 +4,7 @@
 # Contributor: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 pkgname=radare2
-pkgver=6.2.2
+pkgver=6.2.4
 pkgrel=1
 pkgdesc='Open-source tools to disasm, debug, analyze and manipulate binary files'
 arch=('x86_64' 'aarch64')
@@ -29,21 +29,21 @@ makedepends=(
 )
 optdepends=('r2ghidra: ghidra decompiler plugin')
 options=('!emptydirs')
-_sdb_ver=2.5.2
-_qjs_ver=9d15fb60b67c45fd0de413bb49e48f8dacebac16
+_sdb_ver=2.5.8
+_qjs_ver=b51e5278439b2fa0510fbb1f3b3dff9f0064d5d7
 # The testbins commit is not locked upstream but do it here for
 # reproducibility.
-_testbins_ver=71a65843d445ac412afa7afccace03d55eef4362
+_testbins_ver=297b778000bbfaf9bf4717cb95535c3b80d52e3e
 source=(
   "git+https://github.com/radareorg/radare2.git#tag=$pkgver"
   "git+https://github.com/radareorg/sdb.git#tag=$_sdb_ver"
   "qjs::git+https://github.com/quickjs-ng/quickjs.git#commit=$_qjs_ver"
   "git+https://github.com/radareorg/radare2-testbins.git#commit=$_testbins_ver"
 )
-b2sums=('6681111fcf9ffcaa64f31869ea73f55d1eeeeb9c969237ad8f4fd27b99d89dc7806d8d430618e68680a83cce3e10eb0e6aba6bb45de3679352f5784d88739078'
-        'd2fb48477b7ad36af4195714ae93739ca6a76ffd044ae5de82fb46f5359ef76622ca561a04bfe375bba38c06af8ad210ffcc8fcb9e0be975af12cedd9a3a6306'
-        'bf0111950a6c1d7b5add926649088dcddbfdadd8ce827c0cf31e3dabf79702e7530b38cd868c447947bce41cb0e2c96a1073024d59ad44cdb9ecfc531f0d2610'
-        'f042c23f07188b7ef87b68391188c83d770578ce8422db54c7db48232dc563914c3a1c49bece69a363c2e4f56f76cfb7f64e54eea380d06534bcffe4586fbd17')
+b2sums=('cdef204a17b0c7ffdd601c4792d0fe1433282281259f8076872eff8f1fa03d6dd69c29a2ac2f636719d3456ff23d1f51e58aa32dd12c78f6119e71dccb277ebf'
+        'c57a79c88bda8a191bca07251e3cd4b3275cf0d7915ec5f5fe05b8e60207539c186572a45a98c290a1e1b521b508c74f1471e2821aa679663357b783e05646bf'
+        'a63a54821b7b38d57a6489c103482a5d16abc60f50643d31c4cd00398617e4aae651fad0ac3d93546d2f74219e2925d28f694e914f7fb144d25b54c2efdc2604'
+        'daf9ac38c86cbd441fdfe65540f107579b813766ef89dfae53a1038cf79070eb9e744f9b458da63700b8872c7fb6159c94d78be5c7b180c52b390668dd955c00')
 
 prepare() {
   cd $pkgname
@@ -55,6 +55,16 @@ prepare() {
   done
 
   cp -a ../radare2-testbins test/bins
+
+  # The meson build of this tag neither builds the pcap bin plugin nor
+  # registers the tmp fs plugin, although the unit test suite exercises
+  # both. Upstream only builds them in the legacy make system (the fs
+  # plugin list was fixed in master after this tag, pcap is still not
+  # ported to meson). Wire both into the meson build so the full test
+  # suite can run.
+  sed -i "s/^fs_plugins = \[ 'r2', /fs_plugins = [ 'tmp', 'r2', /" libr/meson.build
+  sed -i "s/^bin_plugins = \[ 'null' \]/bin_plugins = [ 'pcap', 'null' ]/" libr/meson.build
+  sed -i "s|^  'p/bin_art\.c',$|  'p/bin_art.c',\n  'p/bin_pcap.c',\n  'format/pcap/pcap.c',|" libr/bin/meson.build
 }
 
 build() {

@@ -11,7 +11,9 @@
   (`pacman -Rdd raylib`), then install this one.
 * Still disabled upstream: TGA, PSD.
 
-## Why I Renamed it to raylin-jpg
+Also this builds static build automatically on my ArchLinux Aarch64 system!
+
+## Why I Renamed it to raylib-jpg
 
 Real Answer: to avoid automatic updates from official repo's raylib.  
 Bonus Answer: I can switch to official repo's package just by installing it

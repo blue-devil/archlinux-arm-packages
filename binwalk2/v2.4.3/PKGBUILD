@@ -3,7 +3,7 @@
 _pkgname=binwalk
 pkgname="${_pkgname}2"
 pkgver=2.4.3
-pkgrel=1
+pkgrel=16
 pkgdesc='Tool for searching a given binary image for embedded files'
 url='https://github.com/OSPG/binwalk'
 arch=(any)
