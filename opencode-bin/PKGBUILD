@@ -2,7 +2,7 @@
 # Contributor: Blue DeviL // SCT <bluedevil.SCT at proton dot me>
 
 pkgname='opencode-bin'
-pkgver=2.2.5
+pkgver=2.2.6
 pkgrel=1
 pkgdesc='The AI coding agent built for the terminal.'
 arch=('aarch64' 'x86_64')
@@ -16,9 +16,9 @@ options=('!debug' '!strip')
 _npmver="${pkgver//_/-}"
 
 source_x86_64=("${pkgname}_${pkgver}_x86_64.tgz::https://registry.npmjs.org/@opencode/cli-linux-x64/-/cli-linux-x64-${_npmver}.tgz")
-sha256sums_x86_64=('92690eee07a680d3cb760ca02ba43878de9eab1b4e5d5dfae8795518c53628f4')
+sha256sums_x86_64=('00d8b036689fc35927d8f20f57000d5c091fe7a5a3345fef5326f330bfe6d0ce')
 source_aarch64=("${pkgname}_${pkgver}_aarch64.tgz::https://registry.npmjs.org/@opencode/cli-linux-arm64/-/cli-linux-arm64-${_npmver}.tgz")
-sha256sums_aarch64=('f8c5a82075fede9b5b044ed6c8a6d13ad807a7e62caea1cd0a878adef49eb053')
+sha256sums_aarch64=('22352e200630ec61a48a65b9f5c2b627328ae5002658d81c067f67c5fb689898')
 
 package() {
   install -Dm755 "$srcdir/package/bin/opencode" "$pkgdir/usr/bin/opencode"
