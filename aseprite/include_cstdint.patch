@@ -1,0 +1,11 @@
+diff --git a/skia/src/sksl/transform/SkSLTransform.h b/skia/src/sksl/transform/SkSLTransform.h
+index b2d1f90..6a34284 100644
+--- a/skia/src/sksl/transform/SkSLTransform.h
++++ b/skia/src/sksl/transform/SkSLTransform.h
+@@ -10,6 +10,7 @@
+
+ #include <memory>
+ #include <vector>
++#include <cstdint>
+
+ namespace SkSL {
