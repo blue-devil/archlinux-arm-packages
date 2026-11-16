@@ -1,0 +1,14 @@
+diff --git a/src/sage/numerical/backends/highs_backend.pyx b/src/sage/numerical/backends/highs_backend.pyx
+index b58ed5c42ef..384ec995b98 100644
+--- a/src/sage/numerical/backends/highs_backend.pyx
++++ b/src/sage/numerical/backends/highs_backend.pyx
+@@ -895,7 +895,8 @@ cdef class HiGHSBackend(GenericBackend):
+             status = Highs_addRow(self.highs, lb, ub, 0, NULL, NULL)
+             sig_off()
+ 
+-            if status != kHighsStatusOk:
++            # HiGHS >= 1.16 returns a warning for duplicate constraints
++            if status != kHighsStatusOk and status != kHighsStatusWarning:
+                 raise MIPSolverException("HiGHS: Failed to add constraint")
+ 
+             if names is not None and i < len(names):

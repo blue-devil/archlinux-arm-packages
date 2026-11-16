@@ -8,7 +8,7 @@
 
 pkgname=sagemath
 pkgver=10.10
-pkgrel=2
+pkgrel=4
 pkgdesc='Open Source Mathematics Software, free alternative to Magma, Maple, Mathematica, and Matlab'
 arch=('x86_64' 'aarch64')
 url='http://www.sagemath.org'
@@ -144,11 +144,20 @@ checkdepends=(python-pytest)
 source=(git+https://github.com/sagemath/sage#tag=$pkgver
         latte-count.patch
         networkx-3.7.patch
-        pari-2.19.patch)
+        pari-2.19.patch
+        eclib-20261021.patch
+        highs-1.16.patch
+        https://github.com/sagemath/sage/commit/d8ce99e0bb2f1c0a9cacdffd1775e6a302467613.patch
+)
+
 sha256sums=('a940259a5fc00e3d6aae916176f346373026f151a8c4575c5711eb9316f9b058'
             'c3aa0243de70fe9c58772c83e748510b7af6950f98d01b3a819e6f8d1232c797'
             '26f2918e3b775c89d235abab080012186e1d0070ae327f882cf7a95242b7ccf2'
-            'c3ae95ccade6db780b50590dd4ea507312a870bbf0f4d5ce8f415ff9af75e663')
+            'c3ae95ccade6db780b50590dd4ea507312a870bbf0f4d5ce8f415ff9af75e663'
+            '25340de59d54a93d8c2cc6f691aa65e4470dd809c30bff68c5bc94eb6a5b5dc3'
+            'f26456addbdce9ef063752a144cb477c88eed952e825444de042e1534d39ad7f'
+            '28dfe6af1db74a8bf50dcee66483a41a6feb219cea2835ee5318838d02d89ff0'
+)
 
 prepare(){
   cd sage
@@ -159,17 +168,33 @@ prepare(){
   patch -p1 -i ../networkx-3.7.patch
 # support pari 2.19
   patch -p1 -i ../pari-2.19.patch
+# allow eclib 20261021
+  patch -p1 -i ../eclib-20261021.patch
+# support HiGHS 1.16
+  patch -p1 -i ../highs-1.16.patch
+# fix conflicts between PARI and NTL macros
+  patch -p1 -i ../d8ce99e0bb2f1c0a9cacdffd1775e6a302467613.patch
+
 }
 
 build() {
   cd sage
+# Sage pins c_std=c17, and strict ISO C hides the POSIX declarations in <setjmp.h>.
+# PARI >= 2.19 headers use sigjmp_buf, so meson's pari version probe cannot compile
+# and setup dies with "ERROR: Could not run pari version". gnu17 leaves the
+# standard at C17 while exposing POSIX again.
   python -m build --wheel --no-isolation \
     -C setup-args=-Dbuild-docs=false \
-    -C setup-args=-Ddefer_feature_checks=true
+    -C setup-args=-Ddefer_feature_checks=true \
+    -C setup-args=-Dc_std=gnu17
 }
 
 check() {
   cd sage
+# -c/--clean (unlike -C/--cleanbuild) leaves $srcdir in place, so a previous
+# check() leaves this venv behind and reusing it makes the wheel's console
+# scripts collide: FileExistsError: test-env/bin/sage already exists.
+  rm -rf test-env
   python -m venv --system-site-packages test-env
   test-env/bin/python -m installer dist/*.whl
   test-env/bin/python -m pytest -v

@@ -1,0 +1,56 @@
+From d8ce99e0bb2f1c0a9cacdffd1775e6a302467613 Mon Sep 17 00:00:00 2001
+From: Dima Pasechnik <dima@pasechnik.info>
+Date: Thu, 1 Oct 2026 11:41:47 -0500
+Subject: [PATCH] Protect NTL coeff calls from PARI macro expansion
+
+When cypari.h is included after ntlwrap_impl.h in generated Cython code,
+PARI's three-argument coeff macro intercepts the two-argument NTL calls.
+Parenthesize the function name so compilation does not depend on header
+order.
+
+Signed-off-by: Dima Pasechnik <dima@pasechnik.info>
+---
+ src/sage/libs/ntl/ntlwrap_impl.h | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/src/sage/libs/ntl/ntlwrap_impl.h b/src/sage/libs/ntl/ntlwrap_impl.h
+index 094cfb52280..31e60d3588b 100644
+--- a/src/sage/libs/ntl/ntlwrap_impl.h
++++ b/src/sage/libs/ntl/ntlwrap_impl.h
+@@ -10,6 +10,9 @@
+ 
+ #include <NTL/ZZ_limbs.h>
+ 
++// PARI also defines coeff(a, i, j) as a macro. Parenthesize NTL's coeff
++// below so both libraries can be included in the same Cython module.
++
+ //////// ZZ //////////
+ 
+ /* Return value is only valid if the result should fit into an int.
+@@ -155,7 +158,7 @@ static CYTHON_INLINE void ZZX_setitem_from_int(struct ZZX* x, long i, int value)
+    AUTHOR: David Harvey (2006-06-08) */
+ static CYTHON_INLINE int ZZX_getitem_as_int(struct ZZX* x, long i)
+ {
+-    return ZZ_to_int(&coeff(*x, i));
++    return ZZ_to_int(&(coeff)(*x, i));
+ }
+ 
+ /* Copies ith coefficient of x to output.
+@@ -163,7 +166,7 @@ static CYTHON_INLINE int ZZX_getitem_as_int(struct ZZX* x, long i)
+    AUTHOR: David Harvey (2007-02) */
+ static CYTHON_INLINE void ZZX_getitem_as_mpz(mpz_t output, struct ZZX* x, long i)
+ {
+-    const ZZ& z = coeff(*x, i);
++    const ZZ& z = (coeff)(*x, i);
+     ZZ_to_mpz(output, &z);
+ }
+ 
+@@ -621,7 +624,7 @@ static CYTHON_INLINE long ZZ_pX_get_val_coeff(const struct ZZ_pX &f, const struc
+ {
+     // Gets the p-adic valuation of the ith coefficient of f.
+     ZZ *u = new ZZ();
+-    long ans = ZZ_remove(*u, rep(coeff(f, i)), p);
++    long ans = ZZ_remove(*u, rep((coeff)(f, i)), p);
+     delete u;
+     return ans;
+ }
